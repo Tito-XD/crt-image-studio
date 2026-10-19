@@ -26,13 +26,17 @@ jobs:
               url = origin + ('' if name == 'index.html' else name)
               for attempt in range(6):
                   try:
-                      with urllib.request.urlopen(url, timeout=20) as response:
+                      request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; CRTSiteVerification/1.0)'})
+                      with urllib.request.urlopen(request, timeout=20) as response:
                           assert response.status == 200
                           actual = response.read()
                           assert response.headers.get('X-Content-Type-Options') == 'nosniff'
                       break
-                  except (urllib.error.URLError, TimeoutError):
+                  except (urllib.error.URLError, TimeoutError) as error:
                       if attempt == 5:
+                          if isinstance(error, urllib.error.HTTPError):
+                              print('HTTP failure:', error.code, dict(error.headers))
+                              print(error.read(1000).decode('utf-8', errors='replace'))
                           raise
                       time.sleep(5)
               expected = Path(name).read_bytes()
