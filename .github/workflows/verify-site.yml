@@ -1,0 +1,41 @@
+name: Verify deployed site
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Check public DNS, HTTPS and deployed assets
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import time
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+          origin = 'https://crt.tito.cafe/'
+          for name in ['index.html', 'style.css', 'app.js', 'engine.js', 'assets/demo.svg', 'assets/favicon.svg']:
+              url = origin + ('' if name == 'index.html' else name)
+              for attempt in range(6):
+                  try:
+                      with urllib.request.urlopen(url, timeout=20) as response:
+                          assert response.status == 200
+                          actual = response.read()
+                          assert response.headers.get('X-Content-Type-Options') == 'nosniff'
+                      break
+                  except (urllib.error.URLError, TimeoutError):
+                      if attempt == 5:
+                          raise
+                      time.sleep(5)
+              expected = Path(name).read_bytes()
+              assert actual == expected, f'Deployed bytes differ: {name}'
+              print(f'OK {url} sha256={hashlib.sha256(actual).hexdigest()}')
+          PY
