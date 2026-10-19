@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { readFile, mkdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 const ready = page => expect(page.locator('#preview')).toHaveAttribute('data-ready', 'true');
-const snapshot = page => page.locator('#preview').evaluate(canvas => canvas.toDataURL());
+const snapshot = async page => createHash('sha256').update(await page.locator('#preview').evaluate(canvas => canvas.toDataURL())).digest('hex');
 async function slider(page, id, value) {
   const before = await page.locator('#preview').getAttribute('data-frame');
   await page.locator(`#control-${id}`).fill(String(value));
@@ -28,6 +29,10 @@ async function exported(page) {
 test('presets, controls, comparison and reset change the rendered pixels', async ({page}) => {
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await page.goto('./');await ready(page);
+  await expect.poll(() => page.locator('#preview').evaluate(c => {
+    const ratio = Math.min(devicePixelRatio || 1, 2);
+    return c.width === Math.round(c.clientWidth * ratio) && c.height === Math.round(c.clientHeight * ratio);
+  })).toBe(true);
   const original=await snapshot(page);const hashes=new Set([original]);
   for(const name of ['街机时刻','旧日电视','绿色终端']) {
     await page.getByRole('button',{name:new RegExp(name)}).click();

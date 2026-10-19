@@ -73,7 +73,9 @@ function scheduleRender() {
     } catch (error) { showError(error.message); }
   });
 }
-new ResizeObserver(scheduleRender).observe(area);
+const previewObserver = new ResizeObserver(scheduleRender);
+previewObserver.observe(area);
+previewObserver.observe(screen);
 $('export-size').addEventListener('change', updateExportDimensions);
 function setCompare(value) {
   comparing = value; $('compare').setAttribute('aria-pressed', String(value));
