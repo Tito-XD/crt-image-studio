@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#192f55"/><stop offset=".52" stop-color="#8d7799"/><stop offset="1" stop-color="#f2b197"/></linearGradient><linearGradient id="sea" x2="0" y2="1"><stop stop-color="#b893a3"/><stop offset=".65" stop-color="#597f95"/><stop offset="1" stop-color="#29485e"/></linearGradient><linearGradient id="sun" x2="0" y2="1"><stop stop-color="#f7e7b5"/><stop offset="1" stop-color="#f3ab80"/></linearGradient></defs>
+<rect width="1600" height="1200" fill="url(#sky)"/>
+<g fill="#f4d1bc" opacity=".22"><path d="M0 276h365l70 23H0z"/><path d="M980 150h620v28h-465z"/><path d="M1140 244h460v20h-350z"/></g>
+<g fill="#f6e8cb"><circle cx="809" cy="124" r="2.5"/><circle cx="1321" cy="83" r="3"/><circle cx="1482" cy="386" r="2"/><circle cx="879" cy="240" r="2"/><path d="m739 70 2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/></g>
+<circle cx="1188" cy="410" r="167" fill="url(#sun)"/>
+<path d="M0 671 118 627 228 658 385 563 494 607 610 579 741 653 861 604 990 662 1124 595 1253 642 1370 580 1467 633 1600 594V820H0z" fill="#455978"/>
+<path d="M0 733 180 681 311 712 462 684 690 735 873 672 1014 720 1247 678 1406 700 1600 659V821H0z" fill="#344e69"/>
+<rect y="779" width="1600" height="421" fill="url(#sea)"/>
+<g fill="#f5bc98" opacity=".55"><path d="M1090 797h210v8h-210zm-50 25h300v6h-300zm78 26h145v8h-145zm-19 28h213v6h-213zm-51 27h296v6h-296zm78 29h122v5h-122zm-61 32h220v5h-220zm47 30h138v5h-138z"/></g>
+<g fill="#d0bec0" opacity=".4"><path d="M0 827h362v5H0zm524 23h271v4H524zm-401 34h492v4H123zm254 43h411v5H377zm-354 45h237v5H23zm712 54h169v4H735zm-344 30h345v3H391zm637 24h367v4h-367zm-859 39h201v4H169z"/></g>
+<path d="M0 1049c272-10 443 53 658 93 295 55 591-67 942-41v99H0z" fill="#172f46"/>
+<path d="m0 1107 365 21 419 72H0z" fill="#10283c"/>
+<g fill="#183146"><path d="M1257 868h92v125h-92z"/><path d="m1237 869 66-58 67 58z"/><path d="M1257 993h93l55 31h-183z"/></g>
+<rect x="1296" y="884" width="26" height="43" fill="#f7cf93"/><rect x="1268" y="883" width="13" height="20" fill="#d6a981"/>
+<g stroke="#23364c" stroke-width="11"><path d="M94 553v543m-47-511 119-14m-72 42 64-7m-57-16c183 95 322 141 491 153" fill="none"/></g>
+<g fill="#f7e5c5" font-family="Arial,Helvetica,sans-serif"><text x="125" y="289" font-size="126" font-weight="800" letter-spacing="-5">AFTER</text><text x="125" y="426" font-size="126" font-weight="800" letter-spacing="-5">HOURS.</text><text x="133" y="480" font-size="17" letter-spacing="5" opacity=".75">A PLACE TO SLOW DOWN</text></g>
+<g fill="#f5d3b0" font-family="Arial,Helvetica,sans-serif" font-size="17" letter-spacing="3"><text x="125" y="1139">TITO / ORIGINAL SCENERY</text><text x="1348" y="1139">19:42</text></g>
+</svg>

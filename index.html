@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2f1e9">
+  <meta name="description" content="给图片一点旧时代的光。在线添加 CRT 扫描线、荧光、点阵与屏幕弧度，实时对比，导出 PNG。图片只在浏览器本地处理。">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>CRT 显像工坊 · Tito Studio</title>
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+<svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+  <symbol id="i-compare" viewBox="0 0 24 24"><path d="M12 2v20M8 5H4v14h4m8-14h4v14h-4M7 9l-3 3 3 3m10-6 3 3-3 3"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 7M4 3v7h7"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+  <symbol id="i-picture" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 6-6 5 5 3-3 4 4"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="3"/><path d="M8 22h8m-4-4v4M6 8h12M6 11h12M6 14h8"/></symbol>
+</defs></svg>
+<header class="site-header">
+  <a href="./" class="brand" aria-label="CRT 显像工坊首页"><span class="brand-mark"><svg><use href="#i-monitor"/></svg></span><span><strong>CRT <span class="brand-chinese">显像工坊</span></strong><small>A LITTLE ANALOG MAGIC</small></span></a>
+  <div class="header-right"><span class="local-note"><span class="led"></span>图片不上传</span><button class="button paper" id="open-file"><svg><use href="#i-upload"/></svg><span>打开图片</span></button></div>
+</header>
+<main>
+  <section class="intro"><div><p class="eyebrow">TITO STUDIO <span>/</span> IMAGE LAB 001</p><h1>给画面，一点旧时代的光<span>。</span></h1><p class="intro-copy">扫描线、荧光和一点颗粒，把喜欢的画面装进显像管。</p></div><div class="intro-index" aria-hidden="true">CRT<sup>01</sup><span>MADE FOR YOUR PIXELS</span></div></section>
+  <div class="workspace">
+    <section class="preview-panel" aria-label="图片预览">
+      <div class="preview-toolbar"><div class="file-title"><span class="led"></span><span id="file-name">暮色海岸 · 示例图</span></div><button class="small-button" id="compare" aria-pressed="false"><svg><use href="#i-compare"/></svg>对比原图</button></div>
+      <div class="stage-area" id="stage-area">
+        <div class="monitor" id="monitor">
+          <div class="screen" id="screen">
+            <canvas id="preview" aria-label="CRT 效果预览"></canvas>
+            <div class="original-layer" id="original-layer" hidden><img id="original" alt="原图" draggable="false"></div>
+            <div class="comparison-ui" id="comparison-ui" hidden><span class="side-label before">原图</span><span class="side-label after">CRT</span><div class="split-line"><span>‹ ›</span></div><input id="split" type="range" min="0" max="100" value="50" aria-label="原图与效果分界"></div>
+            <div class="loading-overlay" id="loading">正在点亮显像管…</div>
+          </div>
+          <div class="monitor-chin" aria-hidden="true"><span>PIXEL / ANALOG</span><span class="monitor-slits"></span><span class="monitor-led"></span></div>
+        </div>
+      </div>
+      <div class="preview-meta"><span id="image-info">本地处理 · 实时预览</span><span class="preview-signal">STILL IMAGE / NO FLICKER</span></div>
+      <button class="import-zone" id="drop-button"><svg><use href="#i-picture"/></svg><span><strong>换张自己的图片试试</strong><small>拖到这里、点击选择，或直接粘贴图片</small></span><svg class="import-arrow"><use href="#i-arrow"/></svg></button>
+      <p class="format-hint">JPG / PNG / WebP / AVIF · 单张不超过 32 MB</p>
+    </section>
+    <aside class="control-panel" aria-label="效果调整">
+      <div class="panel-title"><h2>调一调味道</h2><span class="mono">01 — 04</span></div>
+      <div class="presets" role="group" aria-label="CRT 预设">
+        <button class="preset selected" data-preset="handheld" aria-pressed="true"><span class="preset-swatch handheld" aria-hidden="true"></span><span><strong>掌机微光</strong><small>轻扫描 · 像素友好</small></span><span class="preset-dot"></span></button>
+        <button class="preset" data-preset="arcade" aria-pressed="false"><span class="preset-swatch arcade" aria-hidden="true"></span><span><strong>街机时刻</strong><small>鲜明点阵 · 霓虹余晖</small></span><span class="preset-dot"></span></button>
+        <button class="preset" data-preset="warm" aria-pressed="false"><span class="preset-swatch warm" aria-hidden="true"></span><span><strong>旧日电视</strong><small>暖色荧光 · 柔和颗粒</small></span><span class="preset-dot"></span></button>
+        <button class="preset" data-preset="terminal" aria-pressed="false"><span class="preset-swatch terminal" aria-hidden="true"></span><span><strong>绿色终端</strong><small>单色屏幕 · 深夜信号</small></span><span class="preset-dot"></span></button>
+      </div>
+      <div class="adjust-heading"><span id="adjust-state">掌机微光</span><button class="text-button" id="reset"><svg><use href="#i-reset"/></svg>还原预设</button></div>
+      <div id="main-controls" class="sliders"></div>
+      <details class="advanced"><summary>更多调节<span aria-hidden="true">＋</span></summary><div id="advanced-controls" class="sliders"></div></details>
+      <div class="export-section"><label for="export-size">导出尺寸 <span>PNG · 无水印</span></label><select id="export-size"><option value="4096">原尺寸，最长边 4096 px</option><option value="2048">最长边 2048 px</option><option value="1080">最长边 1080 px</option><option value="720">掌机壁纸 · 最长边 720 px</option></select><button class="button export-button" id="export" disabled><svg><use href="#i-download"/></svg><span>导出图片</span><small id="export-dimensions"></small></button><p>保持原图比例，效果会一起存进图片。</p></div>
+    </aside>
+  </div>
+  <div id="error" class="error-message" role="alert" hidden></div>
+  <footer><span><svg><use href="#i-lock"/></svg>你的图片，只留在你的浏览器里。</span><div><button class="text-button" id="load-demo">回到示例图</button><a href="https://github.com/Tito-XD/crt-image-studio" target="_blank" rel="noopener noreferrer">GitHub ↗</a><span class="version">v1.0</span></div></footer>
+</main>
+<input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden>
+<div class="drop-overlay" id="drop-overlay" hidden><div><svg><use href="#i-picture"/></svg><strong>松开，放进显像管。</strong><span>图片会在本机打开</span></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<noscript><p class="noscript">请启用 JavaScript，以便在浏览器本地处理图片。</p></noscript>
+</body>
+</html>
