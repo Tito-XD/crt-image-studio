@@ -4,6 +4,7 @@ This is CRT Image Studio, a standalone static image-effects website.
 
 - Read `README.md` before changing behavior. Keep all work inside this repository; do not change TitoDex App or Launcher checkouts.
 - Preserve browser-local processing. Do not add image uploads, analytics, external fonts, remote assets, or accounts without explicit user approval.
+- Preserve the site's `Cache-Control: no-transform` header: it keeps Cloudflare from automatically injecting analytics scripts without altering settings for other tito.cafe sites.
 - Keep preview and PNG export on the same shader and settings model in `engine.js`. Comparison must never affect exported pixels.
 - Keep all application resource URLs relative so GitHub Pages project paths work.
 - Preserve aspect ratio, avoid upscaling, bound GPU output size, and release temporary object URLs and export contexts.
