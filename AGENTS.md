@@ -9,5 +9,6 @@ This is CRT Image Studio, a standalone static image-effects website.
 - Preserve aspect ratio, avoid upscaling, bound GPU output size, and release temporary object URLs and export contexts.
 - Keep the interface in Simplified Chinese and commit messages in English.
 - Validate effect/import/export changes with `npm test` using installed Chrome. Inspect desktop and mobile screenshots for visual changes. Do not claim physical-device coverage from viewport tests.
-- GitHub Pages publishes `main` at the root. Only publish when the user has authorized it; keep unrelated work intact.
-- The static runtime has no npm dependencies. Playwright is a development-only dependency.
+- Production is Cloudflare Workers Static Assets at `https://crt.tito.cafe/`. Run `npm run deploy` only when the user has authorized publication. Keep the exact custom-domain binding; never add apex or wildcard routes or change other tito.cafe services.
+- `tool/build-site.mjs` copies an explicit allowlist to `dist/`. Do not publish the repository root. GitHub Pages serves only the redirect in `docs/`.
+- The static runtime has no npm dependencies. Playwright and Wrangler are development-only dependencies.

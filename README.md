@@ -2,7 +2,7 @@
 
 给图片一点旧时代的光。一个独立、纯静态的 CRT 图片效果工具。
 
-**在线使用：[CRT 显像工坊](https://tito-xd.github.io/crt-image-studio/)**
+**在线使用：[CRT 显像工坊](https://crt.tito.cafe/)**
 
 ## 使用
 
@@ -43,7 +43,7 @@ npm test
 验证已部署页面：
 
 ```sh
-TEST_URL=https://tito-xd.github.io/crt-image-studio/ npm test
+TEST_URL=https://crt.tito.cafe/ npm test
 ```
 
 ## 文件与发布
@@ -54,6 +54,17 @@ TEST_URL=https://tito-xd.github.io/crt-image-studio/ npm test
 - `assets/`：原创示例画面和图标，没有外链资源。
 - `tests/`：Playwright 浏览器验收。
 
-GitHub Pages 从 `main` 分支根目录发布，`.nojekyll` 关闭 Jekyll。所有运行资源采用相对路径，可部署到仓库子路径；也可以将静态文件放到 Cloudflare Pages。
+正式页面托管在 Cloudflare Workers Static Assets，独立 Worker 名为 `crt-image-studio`，仅绑定 `crt.tito.cafe`。不配置主域名或通配路由，不修改 `tito.cafe` 上的其他服务。
+
+已有 Cloudflare 登录权限时发布：
+
+```sh
+npm ci
+npm run deploy
+```
+
+`npm run build` 只将页面、样式、脚本和图片复制到 `dist/`；测试、文档和部署配置不会发布。运行时仍然是纯静态页面，图片在本机处理。
+
+GitHub 保留源码；旧 GitHub Pages 地址从 `main` 分支的 `docs/` 发布跳转页，自动前往新地址。以后发布页面使用上面的部署命令；推送源码本身不会更新 Cloudflare。
 
 本仓库独立于 TitoDex App 和 TitoDex Launcher，不依赖它们的代码、数据或服务。
