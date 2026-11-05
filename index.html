@@ -48,21 +48,36 @@
       <p class="format-hint">JPG / PNG / WebP / AVIF · 单张不超过 32 MB</p>
     </section>
     <aside class="control-panel" aria-label="效果调整">
-      <div class="panel-title"><h2>调一调味道</h2><span class="mono">01 — 04</span></div>
-      <div class="presets" role="group" aria-label="CRT 预设">
+      <div class="panel-title"><h2>调一调味道</h2><span class="mono" id="preset-index" aria-hidden="true">01 / 12</span></div>
+      <div class="preset-tabs" role="group" aria-label="预设分类">
+        <button class="preset-tab" data-group="crt" aria-pressed="true">显像管<span>CRT</span></button>
+        <button class="preset-tab" data-group="print" aria-pressed="false">纸与像素<span>PRINT</span></button>
+      </div>
+      <div class="presets" role="group" aria-label="显像管预设" data-group="crt">
         <button class="preset selected" data-preset="handheld" aria-pressed="true"><span class="preset-swatch handheld" aria-hidden="true"></span><span><strong>掌机微光</strong><small>轻扫描 · 像素友好</small></span><span class="preset-dot"></span></button>
         <button class="preset" data-preset="arcade" aria-pressed="false"><span class="preset-swatch arcade" aria-hidden="true"></span><span><strong>街机时刻</strong><small>鲜明点阵 · 霓虹余晖</small></span><span class="preset-dot"></span></button>
         <button class="preset" data-preset="warm" aria-pressed="false"><span class="preset-swatch warm" aria-hidden="true"></span><span><strong>旧日电视</strong><small>暖色荧光 · 柔和颗粒</small></span><span class="preset-dot"></span></button>
         <button class="preset" data-preset="terminal" aria-pressed="false"><span class="preset-swatch terminal" aria-hidden="true"></span><span><strong>绿色终端</strong><small>单色屏幕 · 深夜信号</small></span><span class="preset-dot"></span></button>
+        <button class="preset" data-preset="amber" aria-pressed="false"><span class="preset-swatch amber" aria-hidden="true"></span><span><strong>琥珀监视器</strong><small>暖黄单色 · 夜班办公</small></span><span class="preset-dot"></span></button>
+        <button class="preset" data-preset="vhs" aria-pressed="false"><span class="preset-swatch vhs" aria-hidden="true"></span><span><strong>录像带</strong><small>色彩拖影 · 磁带噪点</small></span><span class="preset-dot"></span></button>
+      </div>
+      <div class="presets" role="group" aria-label="纸与像素预设" data-group="print" hidden>
+        <button class="preset" data-preset="polaroid" aria-pressed="false"><span class="preset-swatch polaroid" aria-hidden="true"></span><span><strong>褪色拍立得</strong><small>奶油褪色 · 漏光</small></span><span class="preset-dot"></span></button>
+        <button class="preset" data-preset="sepia" aria-pressed="false"><span class="preset-swatch sepia" aria-hidden="true"></span><span><strong>老相册</strong><small>棕褐相纸 · 斑痕</small></span><span class="preset-dot"></span></button>
+        <button class="preset" data-preset="newsprint" aria-pressed="false"><span class="preset-swatch newsprint" aria-hidden="true"></span><span><strong>旧报纸</strong><small>黑白网点 · 粗纸</small></span><span class="preset-dot"></span></button>
+        <button class="preset" data-preset="comic" aria-pressed="false"><span class="preset-swatch comic" aria-hidden="true"></span><span><strong>漫画网点</strong><small>三色套印 · 鲜亮</small></span><span class="preset-dot"></span></button>
+        <button class="preset" data-preset="pocket" aria-pressed="false"><span class="preset-swatch pocket" aria-hidden="true"></span><span><strong>口袋四色</strong><small>四阶绿屏 · 抖动</small></span><span class="preset-dot"></span></button>
+        <button class="preset" data-preset="eightbit" aria-pressed="false"><span class="preset-swatch eightbit" aria-hidden="true"></span><span><strong>八位像素</strong><small>大像素 · 少色阶</small></span><span class="preset-dot"></span></button>
       </div>
       <div class="adjust-heading"><span id="adjust-state">掌机微光</span><button class="text-button" id="reset"><svg><use href="#i-reset"/></svg>还原预设</button></div>
       <div id="main-controls" class="sliders"></div>
+      <details class="advanced" id="retro-details"><summary>复古质感<span aria-hidden="true">＋</span></summary><div class="sliders"><div class="slider"><div class="slider-heading"><label for="control-palette">色调方案</label></div><select id="control-palette" class="field"></select></div><div id="retro-controls" class="sliders"></div></div></details>
       <details class="advanced"><summary>更多调节<span aria-hidden="true">＋</span></summary><div id="advanced-controls" class="sliders"></div></details>
       <div class="export-section"><label for="export-size">导出尺寸 <span>PNG · 无水印</span></label><select id="export-size"><option value="4096">原尺寸，最长边 4096 px</option><option value="2048">最长边 2048 px</option><option value="1080">最长边 1080 px</option><option value="720">掌机壁纸 · 最长边 720 px</option></select><button class="button export-button" id="export" disabled><svg><use href="#i-download"/></svg><span>导出图片</span><small id="export-dimensions"></small></button><p>保持原图比例，效果会一起存进图片。</p></div>
     </aside>
   </div>
   <div id="error" class="error-message" role="alert" hidden></div>
-  <footer><span><svg><use href="#i-lock"/></svg>你的图片，只留在你的浏览器里。</span><div><button class="text-button" id="load-demo">回到示例图</button><a href="https://github.com/Tito-XD/crt-image-studio" target="_blank" rel="noopener noreferrer">GitHub ↗</a><span class="version">v1.0</span></div></footer>
+  <footer><span><svg><use href="#i-lock"/></svg>你的图片，只留在你的浏览器里。</span><div><button class="text-button" id="load-demo">回到示例图</button><a href="https://github.com/Tito-XD/crt-image-studio" target="_blank" rel="noopener noreferrer">GitHub ↗</a><span class="version">v1.1</span></div></footer>
 </main>
 <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden>
 <div class="drop-overlay" id="drop-overlay" hidden><div><svg><use href="#i-picture"/></svg><strong>松开，放进显像管。</strong><span>图片会在本机打开</span></div></div>

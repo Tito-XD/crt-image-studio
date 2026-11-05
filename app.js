@@ -1,4 +1,4 @@
-import { CRTRenderer, PRESETS, CONTROLS, fitSize } from './engine.js';
+import { CRTRenderer, PRESETS, PRESET_GROUPS, PALETTES, CONTROLS, fitSize } from './engine.js';
 const $ = id => document.getElementById(id);
 const canvas = $('preview'), screen = $('screen'), monitor = $('monitor'), area = $('stage-area');
 let renderer, source, currentURL = null, sourceName = 'after-hours', preset = 'handheld';
@@ -24,22 +24,42 @@ for (const definition of CONTROLS) {
   const input = document.createElement('input'); input.type = 'range'; input.id = label.htmlFor;
   input.min = definition.min; input.max = definition.max; input.step = definition.step || 1;
   heading.append(label, output); wrapper.append(heading, input);
-  $(definition.advanced ? 'advanced-controls' : 'main-controls').append(wrapper);
+  $(definition.group === 'retro' ? 'retro-controls' : definition.advanced ? 'advanced-controls' : 'main-controls').append(wrapper);
   const control = { input, output, definition }; controls.set(definition.key, control); updateControl(control);
   input.addEventListener('input', () => {
     settings[definition.key] = Number(input.value); updateControl(control);
     $('adjust-state').textContent = `${PRESETS[preset].label} · 已微调`; scheduleRender();
   });
 }
+const palette = $('control-palette');
+PALETTES.forEach((label, index) => palette.add(new Option(label, String(index))));
+palette.addEventListener('change', () => {
+  settings.palette = Number(palette.value);
+  $('adjust-state').textContent = `${PRESETS[preset].label} · 已微调`; scheduleRender();
+});
+const presetOrder = PRESET_GROUPS.flatMap(group => group.presets);
+const RETRO_KEYS = CONTROLS.filter(control => control.group === 'retro').map(control => control.key);
+function showGroup(key) {
+  document.querySelectorAll('[data-group]').forEach(element => {
+    if (element.classList.contains('preset-tab')) element.setAttribute('aria-pressed', String(element.dataset.group === key));
+    else element.hidden = element.dataset.group !== key;
+  });
+}
+document.querySelectorAll('.preset-tab').forEach(tab => tab.addEventListener('click', () => showGroup(tab.dataset.group)));
 function selectPreset(name) {
   preset = name; settings = { ...PRESETS[name] };
   document.querySelectorAll('[data-preset]').forEach(button => {
     const selected = button.dataset.preset === name;
     button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
   });
-  controls.forEach(updateControl); $('adjust-state').textContent = PRESETS[name].label; scheduleRender();
+  controls.forEach(updateControl); palette.value = String(settings.palette);
+  // Reveal the texture controls when a preset actually uses them; never collapse what the user opened.
+  if (settings.palette || RETRO_KEYS.some(key => settings[key])) $('retro-details').open = true;
+  $('preset-index').textContent = `${String(presetOrder.indexOf(name) + 1).padStart(2, '0')} / ${presetOrder.length}`;
+  $('adjust-state').textContent = PRESETS[name].label; scheduleRender();
 }
 document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => selectPreset(button.dataset.preset)));
+palette.value = String(settings.palette);
 $('reset').addEventListener('click', () => { selectPreset(preset); toast('已还原当前预设'); });
 
 function updateExportDimensions() {

@@ -61,7 +61,9 @@ test('uploaded pixels keep orientation and PNG export includes the effect even d
   const data=await fixture(page);await page.locator('#file-input').setInputFiles({name:'four-colors.png',mimeType:'image/png',buffer:data});
   await expect(page.locator('#file-name')).toHaveText('four-colors.png');
   await expect(page.locator('#export-dimensions')).toHaveText('640 × 480');
-  await page.locator('summary').click();
+  await page.locator('summary',{hasText:'更多调节'}).click();
+  await page.locator('summary',{hasText:'复古质感'}).click();
+  for(const key of ['paper','halftone','dither','fade','leak','vhs']) await expect(page.locator(`#control-${key}`)).toHaveValue('0');
   for(const key of ['scan','glow','mask','curve','vignette','grain','shift','warmth']) await slider(page,key,0);
   await slider(page,'brightness',100);await slider(page,'saturation',100);
   const plain=await exported(page);expect([plain.width,plain.height]).toEqual([640,480]);
@@ -121,4 +123,33 @@ test('context restoration keeps the image and settings',async({page})=>{
   await page.evaluate(()=>window.testLoss.restoreContext());
   await expect(page.locator('#error')).toBeHidden();await expect(page.locator('#export')).toBeEnabled();
   await expect.poll(()=>snapshot(page)).toBe(before);
+});
+
+test('retro presets render distinct pixels and expose their texture controls',async({page})=>{
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('./');await ready(page);
+  const hashes=new Set([await snapshot(page)]);
+  for(const name of ['琥珀监视器','录像带']) {
+    await page.getByRole('button',{name:new RegExp(name)}).click();
+    await expect.poll(()=>snapshot(page)).not.toBe([...hashes].at(-1));hashes.add(await snapshot(page));
+  }
+  await page.getByRole('button',{name:/纸与像素/}).click();
+  await expect(page.getByRole('button',{name:/掌机微光/})).toBeHidden();
+  for(const name of ['褪色拍立得','老相册','旧报纸','漫画网点','口袋四色','八位像素']) {
+    await page.getByRole('button',{name:new RegExp(name)}).click();
+    await expect(page.getByRole('button',{name:new RegExp(name)})).toHaveAttribute('aria-pressed','true');
+    await expect.poll(()=>snapshot(page)).not.toBe([...hashes].at(-1));hashes.add(await snapshot(page));
+  }
+  expect(hashes.size).toBe(9);
+  await expect(page.locator('#retro-details')).toHaveAttribute('open','');
+  await expect(page.locator('#control-dither')).toHaveValue('45');
+  const before=await snapshot(page);
+  await page.locator('#control-palette').selectOption('4');
+  await expect.poll(()=>snapshot(page)).not.toBe(before);
+  await expect(page.locator('#adjust-state')).toContainText('已微调');
+  await page.getByRole('button',{name:/旧报纸/}).click();
+  const news=await exported(page);expect(news.name).toMatch(/-crt-newsprint\.png$/);
+  await mkdir('test-results/visual',{recursive:true});
+  await page.screenshot({path:'test-results/visual/newsprint.png',fullPage:true});
+  expect(errors).toEqual([]);await expect(page.locator('#error')).toBeHidden();
 });
