@@ -22,7 +22,7 @@ jobs:
           from pathlib import Path
 
           origin = 'https://crt.tito.cafe/'
-          for name in ['index.html', 'style.css', 'app.js', 'engine.js', 'assets/demo.svg', 'assets/favicon.svg', 'assets/paper.svg']:
+          for name in ['index.html', 'style.css', 'app.js', 'engine.js', 'frame.js', 'assets/demo.svg', 'assets/favicon.svg', 'assets/paper.svg']:
               url = origin + ('' if name == 'index.html' else name)
               for attempt in range(6):
                   try:

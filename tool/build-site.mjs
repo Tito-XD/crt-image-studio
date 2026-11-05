@@ -8,7 +8,7 @@ await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 
 // Publish only browser assets, never source tooling or local configuration.
-for (const path of ['index.html', 'style.css', 'app.js', 'engine.js', 'assets', '_headers']) {
+for (const path of ['index.html', 'style.css', 'app.js', 'engine.js', 'frame.js', 'assets', '_headers']) {
   await cp(resolve(root, path), resolve(output, path), { recursive: true });
 }
 console.log('Prepared static site in dist/');

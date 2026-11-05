@@ -7,7 +7,7 @@ This is CRT Image Studio, a standalone static image-effects website.
 - Preserve the site's `Cache-Control: no-transform` header: it keeps Cloudflare from automatically injecting analytics scripts without altering settings for other tito.cafe sites.
 - Keep preview and PNG export on the same shader and settings model in `engine.js`. Comparison must never affect exported pixels.
 - Keep all application resource URLs relative so GitHub Pages project paths work.
-- Preserve aspect ratio, avoid upscaling, bound GPU output size, and release temporary object URLs and export contexts.
+- Never stretch or upscale the image itself, bound GPU output size, and release temporary object URLs and export contexts. Framing (`frame.js`) may change the canvas ratio; with the 原图 ratio the composed source must stay byte-identical to the unframed path.
 - Keep the interface in Simplified Chinese and commit messages in English.
 - Validate effect/import/export changes with `npm test` using installed Chrome. Inspect desktop and mobile screenshots for visual changes. Do not claim physical-device coverage from viewport tests.
 - Production is Cloudflare Workers Static Assets at `https://crt.tito.cafe/`. Run `npm run deploy` only when the user has authorized publication. Keep the exact custom-domain binding; never add apex or wildcard routes or change other tito.cafe services.
