@@ -196,3 +196,24 @@ test('framing pads with the chosen colour, covers without padding and returns to
   await page.getByRole('button',{name:'完成'}).click();
   await expect(page.locator('#style-view')).toBeVisible();await expect(page.locator('#frame-toggle')).toBeFocused();
 });
+
+test('extra palettes: invert flips the pixels and every palette renders differently',async({page})=>{
+  await page.goto('./');await ready(page);
+  const data=await fixture(page);await page.locator('#file-input').setInputFiles({name:'four-colors.png',mimeType:'image/png',buffer:data});
+  await expect(page.locator('#file-name')).toHaveText('four-colors.png');
+  await neutral(page);
+  await page.locator('[data-param=palette]').click();
+  const options=await page.locator('#control-palette option').allTextContents();
+  expect(options.slice(6)).toEqual(['反色','蓝晒','双色','热成像','青品四色']);
+  const hashes=new Set([await snapshot(page)]);
+  for(let i=6;i<options.length;i++){
+    await page.locator('#control-palette').selectOption(String(i));
+    await expect.poll(()=>snapshot(page)).not.toBe([...hashes].at(-1));hashes.add(await snapshot(page));
+  }
+  expect(hashes.size).toBe(6);
+  await page.locator('#control-palette').selectOption('6');
+  const inverted=await exported(page);
+  const samples=await pixels(page,inverted.data,[[100,100],[500,100],[100,350],[500,350]]);
+  for(const [i,expected] of [[226,71,45],[66,181,221],[103,184,90],[233,197,101]].entries())
+    for(let channel=0;channel<3;channel++) expect(Math.abs(samples[i][channel]-(255-expected[channel]))).toBeLessThanOrEqual(2);
+});

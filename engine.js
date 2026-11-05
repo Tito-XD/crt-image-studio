@@ -19,7 +19,8 @@ export const PRESET_GROUPS = [
   { key: 'crt', label: '显像管', presets: ['handheld', 'arcade', 'warm', 'terminal', 'amber', 'vhs'] },
   { key: 'print', label: '纸与像素', presets: ['polaroid', 'sepia', 'newsprint', 'comic', 'pocket', 'eightbit'] },
 ];
-export const PALETTES = ['原色', '绿屏', '琥珀', '棕褐', '四色', '黑白'];
+// Indices are stored in presets; append new palettes, never reorder.
+export const PALETTES = ['原色', '绿屏', '琥珀', '棕褐', '四色', '黑白', '反色', '蓝晒', '双色', '热成像', '青品四色'];
 // One fixed order for the parameter chips; the panel shows a single control at a time.
 export const CONTROLS = [
   { key: 'scan', label: '扫描线', min: 0, max: 100 },
@@ -89,6 +90,14 @@ float dotScreen(vec2 uv, float ink, float angle, float cells) {
   float m = ink <= 0.0 ? 0.0 : 1.0 - smoothstep(r - aa, r + aa, d);
   return mix(clamp(ink, 0.0, 1.0), m, smoothstep(.5, .28, cells / u_resolution.y));
 }
+vec3 thermal(float x) {
+  x = clamp(x, 0.0, 1.0) * 4.0;
+  vec3 a = vec3(.05, .03, .2), b = vec3(.45, .1, .6), c = vec3(.92, .2, .2), d = vec3(1.0, .7, .1), e = vec3(1.0, .97, .8);
+  return x < 1.0 ? mix(a, b, x) : x < 2.0 ? mix(b, c, x - 1.0) : x < 3.0 ? mix(c, d, x - 2.0) : mix(d, e, x - 3.0);
+}
+vec3 cgaShade(float i) {
+  return i < .5 ? vec3(.04, .04, .07) : i < 1.5 ? vec3(.85, .22, .72) : i < 2.5 ? vec3(.32, .85, .9) : vec3(.97, .96, .92);
+}
 vec3 pocketShade(float x) {
   return x < .5 ? mix(vec3(.10, .17, .13), vec3(.30, .44, .27), x * 2.0) : mix(vec3(.30, .44, .27), vec3(.72, .79, .52), x * 2.0 - 1.0);
 }
@@ -142,6 +151,11 @@ void main() {
   else if (mode == 3.0) color = vec3(luma) * vec3(1.06, .93, .74) + vec3(.045, .025, 0.);
   else if (mode == 4.0) color = pocketShade(clamp(floor(luma * 3.0 + mix(.5, bayer, dither)) / 3.0, 0.0, 1.0));
   else if (mode == 5.0) color = vec3(luma);
+  else if (mode == 6.0) color = 1.0 - clamp(color, 0.0, 1.0);
+  else if (mode == 7.0) color = mix(vec3(.04, .16, .36), vec3(.93, .95, .9), pow(luma, .9));
+  else if (mode == 8.0) color = mix(vec3(.16, .2, .45), vec3(1.0, .62, .5), smoothstep(0.0, 1.0, luma));
+  else if (mode == 9.0) color = thermal(luma);
+  else if (mode == 10.0) color = cgaShade(clamp(floor(luma * 3.0 + mix(.5, bayer, dither)), 0.0, 3.0));
   float fade = u_retro1.w, leak = u_retro2.y;
   if (fade > 0.0) color = mix(color, color * .8 + vec3(.14, .12, .1), fade * .85);
   if (leak > 0.0) {
@@ -151,7 +165,7 @@ void main() {
     a *= .55 + .7 * fbm(lp * 2.2 + 3.0);
     color = 1.0 - (1.0 - color) * (1.0 - vec3(1.0, .46, .2) * clamp(a, 0.0, 1.0) * leak);
   }
-  if (dither > 0.0 && mode != 4.0) {
+  if (dither > 0.0 && mode != 4.0 && mode != 10.0) {
     float levels = mix(12.0, 3.0, dither);
     color = floor(clamp(color, 0.0, 1.0) * (levels - 1.0) + mix(.5, bayer, dither)) / (levels - 1.0);
   }
@@ -159,7 +173,7 @@ void main() {
   if (ht > 0.0) {
     float cells = u_tone.z * .5;
     vec3 printed;
-    if (mode == 0.0) {
+    if (mode == 0.0 || mode == 6.0) {
       vec3 ink = 1.0 - clamp(color, 0.0, 1.0);
       printed = 1.0 - vec3(dotScreen(q, ink.r, .262, cells), dotScreen(q, ink.g, 1.309, cells), dotScreen(q, ink.b, 0.0, cells));
     } else {

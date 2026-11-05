@@ -4,3 +4,4 @@ playwright-report/
 .DS_Store
 dist/
 .wrangler/
+demo/out/
