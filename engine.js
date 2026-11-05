@@ -19,25 +19,27 @@ export const PRESET_GROUPS = [
   { key: 'crt', label: '显像管', presets: ['handheld', 'arcade', 'warm', 'terminal', 'amber', 'vhs'] },
   { key: 'print', label: '纸与像素', presets: ['polaroid', 'sepia', 'newsprint', 'comic', 'pocket', 'eightbit'] },
 ];
-export const PALETTES = ['原色', '绿色荧光', '琥珀荧光', '棕褐旧照', '口袋四色', '黑白油墨'];
+export const PALETTES = ['原色', '绿屏', '琥珀', '棕褐', '四色', '黑白'];
+// One fixed order for the parameter chips; the panel shows a single control at a time.
 export const CONTROLS = [
   { key: 'scan', label: '扫描线', min: 0, max: 100 },
-  { key: 'glow', label: '荧光晕', min: 0, max: 100 },
-  { key: 'mask', label: '荧光点阵', min: 0, max: 100 },
-  { key: 'curve', label: '屏幕弧度', min: 0, max: 100 },
-  { key: 'vignette', label: '边缘暗角', min: 0, max: 100 },
-  { key: 'grain', label: '细微颗粒', min: 0, max: 100 },
-  { key: 'lines', label: '扫描线密度', min: 80, max: 480, step: 10, advanced: true },
-  { key: 'shift', label: '色彩错位', min: 0, max: 100, advanced: true },
-  { key: 'brightness', label: '亮度', min: 70, max: 140, advanced: true },
-  { key: 'saturation', label: '饱和度', min: 0, max: 150, advanced: true },
-  { key: 'warmth', label: '冷暖色调', min: -100, max: 100, advanced: true },
-  { key: 'paper', label: '纸张纹理', min: 0, max: 100, group: 'retro' },
-  { key: 'halftone', label: '印刷网点', min: 0, max: 100, group: 'retro' },
-  { key: 'dither', label: '像素抖动', min: 0, max: 100, group: 'retro' },
-  { key: 'fade', label: '褪色', min: 0, max: 100, group: 'retro' },
-  { key: 'leak', label: '漏光', min: 0, max: 100, group: 'retro' },
-  { key: 'vhs', label: '录像带干扰', min: 0, max: 100, group: 'retro' },
+  { key: 'glow', label: '荧光', min: 0, max: 100 },
+  { key: 'mask', label: '点阵', min: 0, max: 100 },
+  { key: 'curve', label: '弧度', min: 0, max: 100 },
+  { key: 'vignette', label: '暗角', min: 0, max: 100 },
+  { key: 'grain', label: '颗粒', min: 0, max: 100 },
+  { key: 'palette', label: '色调', type: 'select' },
+  { key: 'paper', label: '纸纹', min: 0, max: 100 },
+  { key: 'halftone', label: '网点', min: 0, max: 100 },
+  { key: 'dither', label: '抖动', min: 0, max: 100 },
+  { key: 'fade', label: '褪色', min: 0, max: 100 },
+  { key: 'leak', label: '漏光', min: 0, max: 100 },
+  { key: 'vhs', label: '干扰', min: 0, max: 100 },
+  { key: 'lines', label: '密度', min: 80, max: 480, step: 10 },
+  { key: 'shift', label: '错位', min: 0, max: 100 },
+  { key: 'brightness', label: '亮度', min: 70, max: 140 },
+  { key: 'saturation', label: '饱和度', min: 0, max: 150 },
+  { key: 'warmth', label: '冷暖', min: -100, max: 100 },
 ];
 export function fitSize(width, height, limit) {
   const scale = Math.min(1, limit / Math.max(width, height));

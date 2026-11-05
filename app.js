@@ -3,14 +3,9 @@ import { RATIOS, BACKDROPS, NEUTRALS, composeFrame, extractPalette, toHex } from
 const $ = id => document.getElementById(id);
 const canvas = $('preview'), screen = $('screen'), monitor = $('monitor'), area = $('stage-area');
 const DEMO = '暮色海岸 · 示例图';
-const NOTES = {
-  handheld: '轻扫描线', arcade: '粗点阵，色艳', warm: '偏暖，带雪花', terminal: '黑底绿字',
-  amber: '黑底黄字', vhs: '拖影和噪点', polaroid: '发白，漏光', sepia: '棕色相纸',
-  newsprint: '黑白网点', comic: '三色网点', pocket: '四阶绿色', eightbit: '大像素',
-};
-let renderer, source, image, box, currentURL = null, sourceName = 'image', preset = 'handheld';
+let renderer, source, image, box, currentURL = null, sourceName = 'image', preset = 'handheld', activeParam = 'scan';
 let settings = { ...PRESETS[preset] }, loadingId = 0, renderingFrame = 0, exportBusy = false, comparing = false, toastTimer;
-let originalSize = { width: 1600, height: 1200 }, contextLost = false, picking = false, palette = [];
+let originalSize = { width: 1600, height: 1200 }, contextLost = false, picking = false, palette = [], exportLimit = 'full';
 const frame = { ratio: 'source', fit: 'contain', margin: 8, backdrop: 'blur', color: NEUTRALS[0], autoColor: true, panX: 0, panY: 0 };
 const controls = new Map();
 const toast = message => {
@@ -20,37 +15,55 @@ const toast = message => {
 function showError(message) { $('error').textContent = message; $('error').hidden = false; }
 function clearError() { $('error').hidden = true; $('error').textContent = ''; }
 const fill = (input, min, max) => input.style.setProperty('--fill', `${(Number(input.value) - min) / (max - min) * 100}%`);
+
+// One parameter at a time: chips pick which control is shown.
+const NEUTRAL = { brightness: 100, saturation: 100 };
+const isUsed = key => key === 'lines' ? ['scan', 'mask', 'halftone', 'dither'].some(k => settings[k]) : settings[key] !== (NEUTRAL[key] ?? 0);
 function updateControl(control) {
-  const { input, output, definition } = control;
-  input.value = settings[definition.key]; output.value = input.value; fill(input, definition.min, definition.max);
+  const { input, output, definition, chip } = control, value = settings[definition.key];
+  input.value = String(value);
+  if (output) { output.value = input.value; fill(input, definition.min, definition.max); }
+  chip.classList.toggle('used', isUsed(definition.key));
+  chip.classList.toggle('changed', value !== PRESETS[preset][definition.key]);
 }
-const markTweaked = () => { $('adjust-state').textContent = `${PRESETS[preset].label} · 已改动`; };
+function refreshParams() {
+  controls.forEach(updateControl);
+  $('reset').disabled = !CONTROLS.some(c => settings[c.key] !== PRESETS[preset][c.key]);
+}
+function showParam(key) {
+  activeParam = key;
+  controls.forEach((c, k) => { c.block.hidden = k !== key; c.chip.setAttribute('aria-pressed', String(k === key)); });
+}
 for (const definition of CONTROLS) {
-  const wrapper = document.createElement('div'); wrapper.className = 'slider';
+  const id = `control-${definition.key}`;
+  const chip = document.createElement('button'); chip.className = 'param-chip'; chip.textContent = definition.label;
+  chip.dataset.param = definition.key; chip.setAttribute('aria-controls', `param-${definition.key}`);
+  const block = document.createElement('div'); block.className = 'slider'; block.id = `param-${definition.key}`;
   const heading = document.createElement('div'); heading.className = 'slider-heading';
-  const label = document.createElement('label'); label.htmlFor = `control-${definition.key}`; label.textContent = definition.label;
-  const output = document.createElement('output'); output.setAttribute('for', label.htmlFor);
-  const input = document.createElement('input'); input.type = 'range'; input.id = label.htmlFor;
-  input.min = definition.min; input.max = definition.max; input.step = definition.step || 1;
-  heading.append(label, output); wrapper.append(heading, input);
-  $(definition.group === 'retro' ? 'retro-controls' : definition.advanced ? 'advanced-controls' : 'main-controls').append(wrapper);
-  const control = { input, output, definition }; controls.set(definition.key, control); updateControl(control);
-  input.addEventListener('input', () => { settings[definition.key] = Number(input.value); updateControl(control); markTweaked(); scheduleRender(); });
+  const label = document.createElement('label'); label.htmlFor = id; label.textContent = definition.label; heading.append(label);
+  let input, output;
+  if (definition.type === 'select') {
+    input = document.createElement('select'); input.className = 'field';
+    PALETTES.forEach((name, index) => input.add(new Option(name, String(index))));
+  } else {
+    input = document.createElement('input'); input.type = 'range';
+    input.min = definition.min; input.max = definition.max; input.step = definition.step || 1;
+    output = document.createElement('output'); output.setAttribute('for', id); heading.append(output);
+  }
+  input.id = id; block.append(heading, input); $('param-chips').append(chip); $('param-body').append(block);
+  controls.set(definition.key, { input, output, definition, chip, block });
+  chip.addEventListener('click', () => showParam(definition.key));
+  input.addEventListener(definition.type === 'select' ? 'change' : 'input', () => { settings[definition.key] = Number(input.value); refreshParams(); scheduleRender(); });
 }
+showParam(activeParam);
 for (const group of PRESET_GROUPS) {
   const holder = document.querySelector(`.presets[data-group=${group.key}]`);
   for (const key of group.presets) {
     const button = document.createElement('button'); button.className = 'preset'; button.dataset.preset = key;
-    button.innerHTML = `<span class="preset-swatch ${key}" aria-hidden="true"></span><span><strong></strong><small></small></span>`;
-    button.querySelector('strong').textContent = PRESETS[key].label; button.querySelector('small').textContent = NOTES[key];
-    holder.append(button);
+    button.innerHTML = `<span class="preset-swatch ${key}" aria-hidden="true"></span><strong></strong>`;
+    button.querySelector('strong').textContent = PRESETS[key].label; holder.append(button);
   }
 }
-const paletteSelect = $('control-palette');
-PALETTES.forEach((label, index) => paletteSelect.add(new Option(label, String(index))));
-paletteSelect.addEventListener('change', () => { settings.palette = Number(paletteSelect.value); markTweaked(); scheduleRender(); });
-const presetOrder = PRESET_GROUPS.flatMap(group => group.presets);
-const RETRO_KEYS = CONTROLS.filter(control => control.group === 'retro').map(control => control.key);
 function showGroup(key) {
   document.querySelectorAll('[data-group]').forEach(element => {
     if (element.classList.contains('preset-tab')) element.setAttribute('aria-pressed', String(element.dataset.group === key));
@@ -64,15 +77,21 @@ function selectPreset(name) {
     const selected = button.dataset.preset === name;
     button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
   });
-  controls.forEach(updateControl); paletteSelect.value = String(settings.palette);
-  // Open the texture controls when a preset uses them; never collapse what the user opened.
-  if (settings.palette || RETRO_KEYS.some(key => settings[key])) $('retro-details').open = true;
-  $('preset-index').textContent = `${String(presetOrder.indexOf(name) + 1).padStart(2, '0')} / ${presetOrder.length}`;
-  $('adjust-state').textContent = PRESETS[name].label; scheduleRender();
+  refreshParams(); scheduleRender();
 }
 document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => selectPreset(button.dataset.preset)));
 selectPreset(preset);
-$('reset').addEventListener('click', () => { selectPreset(preset); toast('已还原这个预设'); });
+$('reset').addEventListener('click', () => { selectPreset(preset); toast('已还原'); });
+
+// The frame view temporarily replaces the style view so the preview stays visible.
+function setFrameView(open) {
+  $('frame-view').hidden = !open; $('style-view').hidden = open;
+  $('frame-toggle').setAttribute('aria-expanded', String(open));
+  if (!open && picking) setPicking(false);
+  (open ? $('frame-done') : $('frame-toggle')).focus({ preventScroll: true });
+}
+$('frame-toggle').addEventListener('click', () => setFrameView($('frame-view').hidden));
+$('frame-done').addEventListener('click', () => setFrameView(false));
 
 // Framing controls.
 for (const ratio of RATIOS) {
@@ -105,7 +124,8 @@ function renderSwatches() {
 function syncHint() {
   const cover = frame.ratio !== 'source' && frame.fit === 'cover' && box?.overflow && (box.overflow.x > 1 || box.overflow.y > 1);
   screen.classList.toggle('pannable', Boolean(cover) && !picking);
-  $('preview-hint').textContent = picking ? '点一下画面取色' : cover ? '拖动画面调整位置，双击回到中间' : '';
+  const hint = picking ? '点画面取色' : cover ? '拖动调整位置，双击居中' : '';
+  $('preview-hint').textContent = hint; $('preview-hint').hidden = !hint;
 }
 function syncFrameUI() {
   const framed = frame.ratio !== 'source', contain = frame.fit === 'contain';
@@ -114,6 +134,7 @@ function syncFrameUI() {
   document.querySelectorAll('[data-backdrop]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.backdrop === frame.backdrop)));
   $('fit-row').hidden = !framed; $('margin-row').hidden = !contain;
   $('backdrop-row').hidden = !framed || !contain; $('color-row').hidden = !framed || !contain || frame.backdrop === 'blur';
+  $('frame-current').textContent = RATIOS.find(r => r.key === frame.ratio).label;
   const margin = $('frame-margin'); margin.value = frame.margin; $('frame-margin-value').value = frame.margin; fill(margin, 0, 30);
   $('frame-color').value = frame.color; renderSwatches();
   if (!framed || !contain || frame.backdrop === 'blur') { if (picking) setPicking(false); }
@@ -131,12 +152,8 @@ function recompose() {
   try {
     const next = composeFrame(image, frame, renderer.maxEdge);
     renderer.setSource(next.canvas); source = next.canvas; box = next.box;
-    updateInfo(); updateExportDimensions(); syncHint(); drawOriginal(); scheduleRender();
+    syncHint(); drawOriginal(); scheduleRender();
   } catch (error) { showError(error.message); }
-}
-function updateInfo() {
-  const framed = frame.ratio !== 'source' ? ` · 画幅 ${box.width} × ${box.height}` : '';
-  $('image-info').textContent = `原图 ${originalSize.width} × ${originalSize.height}${framed}`;
 }
 function drawOriginal() {
   if (!comparing || !source) return;
@@ -149,7 +166,7 @@ function pickAt(event) {
   const x = Math.min(source.width - 1, Math.max(0, Math.floor((event.clientX - rect.left) / rect.width * source.width)));
   const y = Math.min(source.height - 1, Math.max(0, Math.floor((event.clientY - rect.top) / rect.height * source.height)));
   const [r, g, b] = source.getContext('2d').getImageData(x, y, 1, 1).data;
-  setPicking(false); setColor(toHex(r, g, b)); toast(`背景色已换成 ${toHex(r, g, b)}`);
+  setPicking(false); setColor(toHex(r, g, b)); toast(`已取色 ${toHex(r, g, b)}`);
 }
 let drag = null;
 screen.addEventListener('pointerdown', event => {
@@ -172,11 +189,6 @@ screen.addEventListener('pointerup', endDrag); screen.addEventListener('pointerc
 screen.addEventListener('dblclick', () => { if (screen.classList.contains('pannable')) { frame.panX = frame.panY = 0; frameChanged(); } });
 syncFrameUI();
 
-function updateExportDimensions() {
-  if (!source || !renderer) return;
-  const size = fitSize(source.width, source.height, Math.min(renderer.maxEdge, Number($('export-size').value)));
-  $('export-dimensions').textContent = `${size.width} × ${size.height}`;
-}
 function layoutPreview() {
   if (!source) return;
   const aspect = source.width / source.height;
@@ -207,7 +219,6 @@ function scheduleRender() {
 const previewObserver = new ResizeObserver(scheduleRender);
 previewObserver.observe(area);
 previewObserver.observe(screen);
-$('export-size').addEventListener('change', updateExportDimensions);
 function setCompare(value) {
   comparing = value; $('compare').setAttribute('aria-pressed', String(value));
   $('original-layer').hidden = !value; $('comparison-ui').hidden = !value;
@@ -222,7 +233,7 @@ $('split').addEventListener('input', event => screen.style.setProperty('--split'
 
 async function loadImage(url, name, ownedURL = false) {
   const id = ++loadingId;
-  $('loading').hidden = false; $('loading').textContent = '正在读取图片…'; $('export').disabled = true; clearError();
+  $('loading').hidden = false; $('loading').textContent = '读取中…'; $('export').disabled = true; clearError();
   let committed = false;
   try {
     const next = new Image(); next.src = url; await next.decode();
@@ -242,9 +253,8 @@ async function loadImage(url, name, ownedURL = false) {
     currentURL = ownedURL ? url : null;
     if (oldURL) URL.revokeObjectURL(oldURL);
     $('file-name').textContent = name;
-    $('export-size').options[0].textContent = `最大尺寸（最长边 ${renderer.maxEdge} px）`;
     setCompare(false); $('split').value = '50'; screen.style.setProperty('--split', '50%');
-    syncFrameUI(); updateInfo(); updateExportDimensions(); scheduleRender(); committed = true;
+    syncFrameUI(); scheduleRender(); committed = true;
   } catch (error) {
     if (id === loadingId) showError(error.message.includes('source image') ? '这张图片打不开，请换一张 JPG、PNG、WebP 或 AVIF。' : error.message);
   } finally {
@@ -261,7 +271,6 @@ function openFile(file) {
   return loadImage(URL.createObjectURL(file), file.name, true);
 }
 $('open-file').addEventListener('click', () => $('file-input').click());
-$('drop-button').addEventListener('click', () => $('file-input').click());
 $('file-input').addEventListener('change', event => { openFile(event.target.files[0]); event.target.value = ''; });
 $('load-demo').addEventListener('click', () => loadImage(new URL('./assets/demo.svg', import.meta.url).href, DEMO));
 let dragDepth = 0;
@@ -273,7 +282,7 @@ window.addEventListener('drop', event => {
   if (!event.dataTransfer?.files.length) return;
   event.preventDefault(); dragDepth = 0; $('drop-overlay').hidden = true;
   const files = Array.from(event.dataTransfer.files);
-  openFile(files[0]); if (files.length > 1) toast('一次只能打开一张，已打开第一张');
+  openFile(files[0]); if (files.length > 1) toast('只打开了第一张');
 });
 window.addEventListener('blur', () => { dragDepth = 0; $('drop-overlay').hidden = true; });
 window.addEventListener('paste', event => {
@@ -282,31 +291,60 @@ window.addEventListener('paste', event => {
 });
 window.addEventListener('keydown', event => { if (event.key === 'Escape' && picking) setPicking(false); });
 
-$('export').addEventListener('click', async () => {
+// Export dialog: only sizes that actually differ from the full size are offered.
+function sizeOptions() {
+  const full = fitSize(source.width, source.height, renderer.maxEdge), long = Math.max(full.width, full.height);
+  const options = [{ key: 'full', label: box.capped ? '最大' : '原尺寸', size: full }];
+  for (const edge of [2048, 1080, 720]) if (edge < long) options.push({ key: String(edge), label: `长边 ${edge}`, size: fitSize(source.width, source.height, edge) });
+  return options;
+}
+function openExport() {
   if (!source || exportBusy || contextLost) return;
-  exportBusy = true; $('export').disabled = true; $('export').querySelector('span').textContent = '正在导出…'; clearError();
+  const options = sizeOptions(), holder = $('size-options');
+  if (!options.some(o => o.key === exportLimit)) exportLimit = 'full';
+  holder.querySelectorAll('label').forEach(label => label.remove());
+  for (const option of options) {
+    const label = document.createElement('label'); label.className = 'size-option';
+    label.innerHTML = '<input type="radio" name="export-size"><span></span><span class="mono"></span>';
+    const input = label.querySelector('input'); input.value = option.key; input.checked = option.key === exportLimit;
+    label.children[1].textContent = option.label; label.children[2].textContent = `${option.size.width} × ${option.size.height}`;
+    holder.append(label);
+  }
+  const framed = frame.ratio !== 'source' ? ` · 画幅 ${RATIOS.find(r => r.key === frame.ratio).label}` : '';
+  $('export-info').textContent = `原图 ${originalSize.width} × ${originalSize.height}${framed}`;
+  $('export-note').hidden = !box.capped;
+  $('export-note').textContent = `长边超过 ${renderer.maxEdge} px，会等比缩到 ${renderer.maxEdge}（显卡上限）。`;
+  $('export-dialog').showModal();
+}
+$('export').addEventListener('click', openExport);
+$('export-cancel').addEventListener('click', () => $('export-dialog').close());
+$('export-dialog').addEventListener('click', event => { if (event.target === $('export-dialog')) $('export-dialog').close(); });
+$('export-confirm').addEventListener('click', () => {
+  exportLimit = $('size-options').querySelector('input:checked')?.value || 'full';
+  $('export-dialog').close(); runExport(exportLimit === 'full' ? renderer.maxEdge : Math.min(renderer.maxEdge, Number(exportLimit)));
+});
+async function runExport(limit) {
+  if (!source || exportBusy || contextLost) return;
+  exportBusy = true; $('export').disabled = true; clearError();
   const ratio = frame.ratio === 'source' ? '' : `-${frame.ratio.replace(':', 'x').replace('.', '-')}`;
   const snapshot = { ...settings }, composed = source, name = `${sourceName}-crt-${preset}${ratio}.png`;
-  const dimensions = fitSize(composed.width, composed.height, Math.min(renderer.maxEdge, Number($('export-size').value)));
+  const dimensions = fitSize(composed.width, composed.height, limit);
   let exporter;
   try {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const output = document.createElement('canvas'); exporter = new CRTRenderer(output); exporter.setSource(composed);
     exporter.render(snapshot, dimensions.width, dimensions.height);
-    const blob = await new Promise((resolve, reject) => output.toBlob(blob => blob ? resolve(blob) : reject(new Error('导出失败，调小尺寸再试。')), 'image/png'));
+    const blob = await new Promise((resolve, reject) => output.toBlob(blob => blob ? resolve(blob) : reject(new Error('导出失败，换个小一点的尺寸再试。')), 'image/png'));
     const url = URL.createObjectURL(blob), link = document.createElement('a');
     link.href = url; link.download = name; document.body.append(link); link.click(); link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    toast(`已导出 ${dimensions.width} × ${dimensions.height} PNG`);
+    toast(`已导出 ${dimensions.width} × ${dimensions.height}`);
   } catch (error) { showError(error.message); }
-  finally {
-    exporter?.dispose(); exportBusy = false; $('export').disabled = !source || contextLost;
-    $('export').querySelector('span').textContent = '导出图片';
-  }
-});
+  finally { exporter?.dispose(); exportBusy = false; $('export').disabled = !source || contextLost; }
+}
 canvas.addEventListener('webglcontextlost', event => {
   event.preventDefault(); contextLost = true; $('export').disabled = true;
-  showError('浏览器暂停了绘图，正在等它恢复。图片和设置都还在。');
+  showError('浏览器暂停了绘图，恢复后会继续，设置不会丢。');
 });
 canvas.addEventListener('webglcontextrestored', () => {
   try {

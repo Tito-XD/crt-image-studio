@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f2f1e9">
-  <meta name="description" content="把图片调成老显示器、录像带和旧印刷的样子，裁成常用壁纸比例后导出 PNG。图片只在浏览器本地处理。">
+  <meta name="description" content="CRT、录像带、旧印刷效果，可裁成壁纸比例，导出 PNG。图片在浏览器本地处理。">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>CRT 显像工坊 · Tito's Cafe</title>
   <link rel="canonical" href="https://crt.tito.cafe/">
@@ -18,79 +18,93 @@
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
   <symbol id="i-compare" viewBox="0 0 24 24"><path d="M12 2v20M8 5H4v14h4m8-14h4v14h-4M7 9l-3 3 3 3m10-6 3 3-3 3"/></symbol>
   <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 7M4 3v7h7"/></symbol>
-  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
   <symbol id="i-picture" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 6-6 5 5 3-3 4 4"/></symbol>
-  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
   <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="3"/><path d="M8 22h8m-4-4v4M6 8h12M6 11h12M6 14h8"/></symbol>
   <symbol id="i-cup" viewBox="0 0 24 24"><path d="M4 8h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zm12 1h1.5a2.5 2.5 0 0 1 0 5H16M3 21h16M8 2.5c-.6.8.6 1.7 0 2.5m4-2.5c-.6.8.6 1.7 0 2.5"/></symbol>
   <symbol id="i-pipette" viewBox="0 0 24 24"><path d="m12.5 7.5 4 4M15 9l-9 9-3 1 1-3 9-9m1.5-3.5 1-1a2.1 2.1 0 0 1 3 3l-1 1"/></symbol>
+  <symbol id="i-crop" viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14M2 6h14a2 2 0 0 1 2 2v14"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
 </defs></svg>
 <header class="site-header">
   <div class="brand-row">
     <a class="home-link" href="https://tito.cafe" title="返回咖啡主站" aria-label="返回咖啡主站"><svg><use href="#i-cup"/></svg></a>
-    <a href="./" class="brand" aria-label="CRT 显像工坊首页"><span class="brand-mark"><svg><use href="#i-monitor"/></svg></span><span><strong>CRT <span class="brand-chinese">显像工坊</span></strong><small>Tito's Cafe 小工具</small></span></a>
+    <a href="./" class="brand" aria-label="CRT 显像工坊首页"><span class="brand-mark"><svg><use href="#i-monitor"/></svg></span><strong>CRT<span class="brand-chinese"> 显像工坊</span></strong></a>
   </div>
-  <div class="header-right"><span class="local-note"><span class="led"></span>本地处理，不上传</span><button class="button paper" id="open-file"><svg><use href="#i-upload"/></svg><span>打开图片</span></button></div>
+  <div class="header-right">
+    <span class="local-note"><span class="led"></span>图片不上传</span>
+    <button class="button paper" id="open-file"><svg><use href="#i-upload"/></svg><span>打开<span class="wide-only">图片</span></span></button>
+    <button class="button accent" id="export" disabled><svg><use href="#i-download"/></svg><span>导出<span class="wide-only">图片</span></span></button>
+  </div>
 </header>
 <main>
-  <section class="intro"><p class="eyebrow">CRT IMAGE STUDIO</p><h1>把图片调成老屏幕、旧印刷的样子</h1><p class="intro-copy">选一个风格，需要的话裁成壁纸比例，然后导出 PNG。整个过程都在你的浏览器里完成。</p></section>
   <div class="workspace">
-    <section class="preview-panel" aria-label="图片预览">
-      <div class="preview-toolbar"><div class="file-title"><span class="led"></span><span id="file-name">暮色海岸 · 示例图</span></div><button class="small-button" id="compare" aria-pressed="false"><svg><use href="#i-compare"/></svg>对比原图</button></div>
-      <div class="stage-area" id="stage-area">
-        <div class="monitor" id="monitor">
-          <div class="screen" id="screen">
-            <canvas id="preview" aria-label="效果预览"></canvas>
-            <div class="original-layer" id="original-layer" hidden><canvas id="original" aria-hidden="true"></canvas></div>
-            <div class="comparison-ui" id="comparison-ui" hidden><span class="side-label before">原图</span><span class="side-label after">效果</span><div class="split-line"><span>‹ ›</span></div><input id="split" type="range" min="0" max="100" value="50" aria-label="原图与效果分界"></div>
-            <div class="loading-overlay" id="loading">加载中…</div>
+    <section class="preview-panel" aria-label="预览">
+      <div class="stage">
+        <div class="stage-bar">
+          <button class="pill" id="frame-toggle" aria-expanded="false" aria-controls="frame-view"><svg><use href="#i-crop"/></svg><span>画幅</span><span id="frame-current" class="pill-value">原图</span></button>
+          <span id="file-name" class="file-name">暮色海岸 · 示例图</span>
+          <button class="pill" id="compare" aria-pressed="false"><svg><use href="#i-compare"/></svg>对比原图</button>
+        </div>
+        <div class="stage-area" id="stage-area">
+          <div class="monitor" id="monitor">
+            <div class="screen" id="screen">
+              <canvas id="preview" aria-label="效果预览"></canvas>
+              <div class="original-layer" id="original-layer" hidden><canvas id="original" aria-hidden="true"></canvas></div>
+              <div class="comparison-ui" id="comparison-ui" hidden><span class="side-label before">原图</span><span class="side-label after">效果</span><div class="split-line"><span>‹ ›</span></div><input id="split" type="range" min="0" max="100" value="50" aria-label="原图与效果分界"></div>
+              <div class="loading-overlay" id="loading">加载中…</div>
+            </div>
+            <div class="monitor-chin" aria-hidden="true"><span>TITO · CRT</span><span class="monitor-slits"></span><span class="monitor-led"></span></div>
           </div>
-          <div class="monitor-chin" aria-hidden="true"><span>TITO · CRT</span><span class="monitor-slits"></span><span class="monitor-led"></span></div>
+          <span class="stage-hint" id="preview-hint" hidden></span>
         </div>
       </div>
-      <div class="preview-meta"><span id="image-info">本地预览</span><span id="preview-hint"></span></div>
-      <section class="frame-panel" aria-labelledby="frame-title">
-        <div class="frame-row"><h2 id="frame-title">画幅</h2><div class="chips" role="group" aria-label="画面比例" id="ratio-chips"></div></div>
-        <div class="frame-row" id="fit-row" hidden>
-          <span class="row-label">放法</span>
-          <div class="segmented" role="group" aria-label="放置方式"><button data-fit="contain" aria-pressed="true">留边</button><button data-fit="cover" aria-pressed="false">铺满</button></div>
-          <div class="slider inline-slider" id="margin-row"><div class="slider-heading"><label for="frame-margin">边距</label><output for="frame-margin" id="frame-margin-value">8</output></div><input id="frame-margin" type="range" min="0" max="30" value="8"></div>
-        </div>
-        <div class="frame-row" id="backdrop-row" hidden>
-          <span class="row-label">背景</span>
-          <div class="segmented" role="group" aria-label="背景样式" id="backdrop-chips"></div>
-        </div>
-        <div class="frame-row" id="color-row" hidden>
-          <span class="row-label">颜色</span>
-          <div class="swatches" role="group" aria-label="背景颜色" id="swatches"></div>
-          <label class="swatch custom" title="自选颜色"><input type="color" id="frame-color" value="#f2ecdf" aria-label="自选背景颜色"></label>
-          <button class="small-button" id="pick-color" aria-pressed="false"><svg><use href="#i-pipette"/></svg>从图上取色</button>
-        </div>
-      </section>
-      <button class="import-zone" id="drop-button"><svg><use href="#i-picture"/></svg><span><strong>换一张图片</strong><small>点这里选择，也可以拖进页面或直接粘贴</small></span><svg class="import-arrow"><use href="#i-arrow"/></svg></button>
-      <p class="format-hint">JPG、PNG、WebP、AVIF，单张不超过 32 MB</p>
     </section>
-    <aside class="control-panel" aria-label="效果调整">
-      <div class="panel-title"><h2>风格</h2><span class="mono" id="preset-index" aria-hidden="true">01 / 12</span></div>
-      <div class="preset-tabs" role="group" aria-label="预设分类">
-        <button class="preset-tab" data-group="crt" aria-pressed="true">显像管</button>
-        <button class="preset-tab" data-group="print" aria-pressed="false">纸与像素</button>
+    <aside class="control-panel" aria-label="调整">
+      <div id="style-view">
+        <div class="preset-tabs" role="group" aria-label="预设分类">
+          <button class="preset-tab" data-group="crt" aria-pressed="true">显像管</button>
+          <button class="preset-tab" data-group="print" aria-pressed="false">纸与像素</button>
+        </div>
+        <div class="presets" role="group" aria-label="显像管预设" data-group="crt"></div>
+        <div class="presets" role="group" aria-label="纸与像素预设" data-group="print" hidden></div>
+        <div class="param-head"><span>参数</span><button class="text-button" id="reset" disabled><svg><use href="#i-reset"/></svg>还原预设</button></div>
+        <div class="param-chips" role="group" aria-label="参数" id="param-chips"></div>
+        <div class="param-body" id="param-body"></div>
       </div>
-      <div class="presets" role="group" aria-label="显像管预设" data-group="crt"></div>
-      <div class="presets" role="group" aria-label="纸与像素预设" data-group="print" hidden></div>
-      <div class="adjust-heading"><span id="adjust-state">掌机微光</span><button class="text-button" id="reset"><svg><use href="#i-reset"/></svg>还原预设</button></div>
-      <div id="main-controls" class="sliders"></div>
-      <details class="advanced" id="retro-details"><summary>复古质感<span aria-hidden="true">＋</span></summary><div class="sliders"><div class="slider"><div class="slider-heading"><label for="control-palette">色调</label></div><select id="control-palette" class="field"></select></div><div id="retro-controls" class="sliders"></div></div></details>
-      <details class="advanced"><summary>更多调节<span aria-hidden="true">＋</span></summary><div id="advanced-controls" class="sliders"></div></details>
-      <div class="export-section"><label for="export-size">导出 <span>PNG</span></label><select id="export-size"><option value="4096">最大尺寸</option><option value="2048">最长边 2048 px</option><option value="1080">最长边 1080 px</option><option value="720">最长边 720 px</option></select><button class="button export-button" id="export" disabled><svg><use href="#i-download"/></svg><span>导出图片</span><small id="export-dimensions"></small></button><p>小图不会被放大。显示器外壳只是预览，不会导出。</p></div>
+      <div id="frame-view" hidden>
+        <div class="view-head"><button class="text-button" id="frame-done"><svg><use href="#i-back"/></svg>完成</button><h2>画幅</h2></div>
+        <div class="frame-group"><span class="row-label">比例</span><div class="chips" role="group" aria-label="画面比例" id="ratio-chips"></div></div>
+        <div class="frame-group" id="fit-row" hidden>
+          <div class="segmented" role="group" aria-label="放置方式"><button data-fit="contain" aria-pressed="true">留边</button><button data-fit="cover" aria-pressed="false">铺满</button></div>
+          <div class="slider" id="margin-row"><div class="slider-heading"><label for="frame-margin">边距</label><output for="frame-margin" id="frame-margin-value">8</output></div><input id="frame-margin" type="range" min="0" max="30" value="8"></div>
+        </div>
+        <div class="frame-group" id="backdrop-row" hidden><span class="row-label">背景</span><div class="segmented wide" role="group" aria-label="背景样式" id="backdrop-chips"></div></div>
+        <div class="frame-group" id="color-row" hidden>
+          <span class="row-label">颜色</span>
+          <div class="swatch-row">
+            <div class="swatches" role="group" aria-label="背景颜色" id="swatches"></div>
+            <label class="swatch custom" title="自选颜色"><input type="color" id="frame-color" value="#f2ecdf" aria-label="自选背景颜色"></label>
+            <button class="pill small" id="pick-color" aria-pressed="false"><svg><use href="#i-pipette"/></svg>取色</button>
+          </div>
+        </div>
+      </div>
     </aside>
   </div>
   <div id="error" class="error-message" role="alert" hidden></div>
-  <footer><span><svg><use href="#i-lock"/></svg>图片只在本机处理，刷新后清空。</span><div><button class="text-button" id="load-demo">回到示例图</button><a href="https://tito.cafe">返回 Tito's Cafe</a><a href="https://github.com/Tito-XD/crt-image-studio" target="_blank" rel="noopener noreferrer">源代码 ↗</a><span class="version">v1.2</span></div></footer>
+  <footer><button class="text-button" id="load-demo">回到示例图</button><a href="https://tito.cafe">返回 Tito's Cafe</a><a href="https://github.com/Tito-XD/crt-image-studio" target="_blank" rel="noopener noreferrer">源代码 ↗</a><span class="version">v1.3</span></footer>
 </main>
+<dialog id="export-dialog" aria-labelledby="export-title">
+  <div class="dialog-body">
+    <h2 id="export-title">导出 PNG</h2>
+    <p class="dialog-meta" id="export-info"></p>
+    <fieldset class="size-options" id="size-options"><legend>尺寸</legend></fieldset>
+    <p class="dialog-note" id="export-note" hidden></p>
+    <div class="dialog-actions"><button class="button paper" id="export-cancel">取消</button><button class="button accent" id="export-confirm"><svg><use href="#i-download"/></svg>导出</button></div>
+  </div>
+</dialog>
 <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden>
-<div class="drop-overlay" id="drop-overlay" hidden><div><svg><use href="#i-picture"/></svg><strong>松手就能打开</strong><span>图片只在本机读取</span></div></div>
+<div class="drop-overlay" id="drop-overlay" hidden><div><svg><use href="#i-picture"/></svg><strong>松手打开</strong></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<noscript><p class="noscript">需要开启 JavaScript 才能在本地处理图片。</p></noscript>
+<noscript><p class="noscript">需要开启 JavaScript。</p></noscript>
 </body>
 </html>

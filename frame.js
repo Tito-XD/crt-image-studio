@@ -22,7 +22,7 @@ export function layoutFrame(width, height, frame, limit) {
   const ratio = RATIOS.find(item => item.key === frame.ratio);
   if (!ratio?.w) {
     const size = fitSize(width, height, limit);
-    return { ...size, framed: false, image: { x: 0, y: 0, width: size.width, height: size.height }, overflow: { x: 0, y: 0 } };
+    return { ...size, framed: false, capped: Math.max(width, height) > limit, image: { x: 0, y: 0, width: size.width, height: size.height }, overflow: { x: 0, y: 0 } };
   }
   const target = ratio.w / ratio.h, aspect = width / height, cover = frame.fit === 'cover';
   let fw, fh;
@@ -37,7 +37,7 @@ export function layoutFrame(width, height, frame, limit) {
   const dw = width * scale, dh = height * scale;
   const pan = (room, value) => room * (.5 + .5 * (cover ? value : 0));
   const image = { x: pan(size.width - dw, frame.panX), y: pan(size.height - dh, frame.panY), width: dw, height: dh };
-  return { ...size, framed: true, image, overflow: { x: Math.max(0, dw - size.width), y: Math.max(0, dh - size.height) } };
+  return { ...size, framed: true, capped: Math.max(fw, fh) > limit, image, overflow: { x: Math.max(0, dw - size.width), y: Math.max(0, dh - size.height) } };
 }
 export function composeFrame(image, frame, limit) {
   const box = layoutFrame(image.naturalWidth, image.naturalHeight, frame, limit);
