@@ -3,7 +3,8 @@ import { RATIOS, BACKDROPS, NEUTRALS, composeFrame, extractPalette, toHex } from
 const $ = id => document.getElementById(id);
 const canvas = $('preview'), screen = $('screen'), monitor = $('monitor'), area = $('stage-area');
 const DEMO = '暮色海岸 · 示例图';
-let renderer, source, image, box, currentURL = null, sourceName = 'image', preset = 'handheld', activeParam = 'scan';
+const MAX_IMPORT_MB = 256;
+let renderer, source, image, pendingImage, box, currentURL = null, sourceName = 'image', preset = 'handheld', activeParam = 'scan';
 let variant = null, settings = { ...PRESETS[preset] }, loadingId = 0, renderingFrame = 0, exportBusy = false, comparing = false, toastTimer;
 let originalSize = { width: 1600, height: 1200 }, contextLost = false, picking = false, palette = [], exportLimit = 'full';
 const frame = { ratio: 'source', fit: 'contain', margin: 8, backdrop: 'blur', color: NEUTRALS[0], autoColor: true, panX: 0, panY: 0 };
@@ -249,31 +250,38 @@ $('split').addEventListener('input', event => screen.style.setProperty('--split'
 
 async function loadImage(url, name, ownedURL = false) {
   const id = ++loadingId;
+  pendingImage?.removeAttribute('src');
+  const next = new Image(); pendingImage = next;
   $('loading').hidden = false; $('loading').textContent = '读取中…'; $('export').disabled = true; clearError();
   let committed = false;
   try {
-    const next = new Image(); next.src = url; await next.decode();
+    next.src = url;
+    try { await next.decode(); }
+    catch { throw new Error('图片读取失败，可能是文件损坏或设备内存不足。请转成 JPG 或缩小后重试。'); }
     if (id !== loadingId) return;
     if (!next.naturalWidth || !next.naturalHeight) throw new Error('没读到图片内容，换一张试试。');
-    if (next.naturalWidth * next.naturalHeight > 64_000_000) throw new Error('图片超过 6400 万像素，先缩小一些再打开。');
     if (!renderer || contextLost) throw new Error('浏览器的绘图功能还没准备好，刷新页面再试一次。');
     const nextPalette = extractPalette(next);
-    frame.panX = frame.panY = 0;
     const nextColor = frame.autoColor && nextPalette[0] ? nextPalette[0] : frame.color;
-    const composed = composeFrame(next, { ...frame, color: nextColor }, renderer.maxEdge);
+    // Camera originals may exceed 100 MP; only the bounded composition reaches the GPU.
+    const composed = composeFrame(next, { ...frame, color: nextColor, panX: 0, panY: 0 }, renderer.maxEdge);
     renderer.setSource(composed.canvas);
-    const oldURL = currentURL;
+    const oldURL = currentURL, oldImage = image;
     image = next; source = composed.canvas; box = composed.box; palette = nextPalette; frame.color = nextColor;
+    frame.panX = frame.panY = 0;
     originalSize = { width: next.naturalWidth, height: next.naturalHeight };
     sourceName = name.replace(/\.[^.]+$/, '').replace(/[\/:*?"<>|]/g, '-').slice(0, 80) || 'image';
     currentURL = ownedURL ? url : null;
+    oldImage?.removeAttribute('src');
     if (oldURL) URL.revokeObjectURL(oldURL);
     $('file-name').textContent = name;
     setCompare(false); $('split').value = '50'; screen.style.setProperty('--split', '50%');
     syncFrameUI(); scheduleRender(); committed = true;
   } catch (error) {
-    if (id === loadingId) showError(error.message.includes('source image') ? '这张图片打不开，请换一张 JPG、PNG、WebP 或 AVIF。' : error.message);
+    if (id === loadingId) showError(error.message);
   } finally {
+    if (pendingImage === next) pendingImage = null;
+    if (!committed) next.removeAttribute('src');
     if (ownedURL && !committed) URL.revokeObjectURL(url);
     if (id === loadingId) { $('loading').hidden = true; $('export').disabled = !source || exportBusy || contextLost; }
   }
@@ -283,7 +291,7 @@ function openFile(file) {
   if (!['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type)) {
     showError('目前支持 JPG、PNG、WebP 和 AVIF。'); return;
   }
-  if (file.size > 32 * 1024 * 1024) { showError('图片超过 32 MB，压缩一下再打开。'); return; }
+  if (file.size > MAX_IMPORT_MB * 1024 * 1024) { showError(`图片超过 ${MAX_IMPORT_MB} MB，压缩一下再打开。`); return; }
   return loadImage(URL.createObjectURL(file), file.name, true);
 }
 $('open-file').addEventListener('click', () => $('file-input').click());
@@ -329,7 +337,7 @@ function openExport() {
   const framed = frame.ratio !== 'source' ? ` · 画幅 ${RATIOS.find(r => r.key === frame.ratio).label}` : '';
   $('export-info').textContent = `原图 ${originalSize.width} × ${originalSize.height}${framed}`;
   $('export-note').hidden = !box.capped;
-  $('export-note').textContent = `长边超过 ${renderer.maxEdge} px，会等比缩到 ${renderer.maxEdge}（显卡上限）。`;
+  $('export-note').textContent = `当前导出长边最多 ${renderer.maxEdge} px，超出会等比缩小。`;
   $('export-dialog').showModal();
 }
 $('export').addEventListener('click', openExport);

@@ -92,6 +92,72 @@ test('uploaded pixels keep orientation and PNG export includes the effect even d
   expect(requests.filter(r=>/^https?:/.test(r.url)&&!r.url.startsWith(new URL(page.url()).origin))).toEqual([]);
 });
 
+test('a 100.8 megapixel camera JPEG opens and exports within the processing limit',async({page})=>{
+  test.setTimeout(90_000);
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('./');await ready(page);
+  // Match the reported camera dimensions, without committing a large fixture or mocking dimensions.
+  await page.evaluate(async()=>{
+    const c=document.createElement('canvas');c.width=12000;c.height=8400;
+    const ctx=c.getContext('2d');
+    for(const [color,x,y] of [['#e2472d',0,0],['#42b5dd',6000,0],['#67b85a',0,4200],['#e9c565',6000,4200]]) {
+      ctx.fillStyle=color;ctx.fillRect(x,y,6000,4200);
+    }
+    const blob=await new Promise(resolve=>c.toBlob(resolve,'image/jpeg',.9));
+    c.width=c.height=1;
+    const transfer=new DataTransfer();transfer.items.add(new File([blob],'camera-100mp.jpg',{type:'image/jpeg'}));
+    const input=document.querySelector('#file-input');input.files=transfer.files;input.dispatchEvent(new Event('change'));
+  });
+  await expect(page.locator('#file-name')).toHaveText('camera-100mp.jpg',{timeout:30_000});
+  await expect(page.locator('#error')).toBeHidden();await neutral(page);
+  await page.locator('#export').click();
+  await expect(page.locator('#export-info')).toContainText('12000 × 8400');
+  expect(await sizeLabels(page)).toEqual([
+    expect.stringMatching(/最大\s*4096 × 2867/),expect.stringMatching(/长边 2048\s*2048 × 1434/),
+    expect.stringMatching(/长边 1080\s*1080 × 756/),expect.stringMatching(/长边 720\s*720 × 504/),
+  ]);
+  await expect(page.locator('#export-note')).toContainText('4096');
+  await mkdir('test-results/visual',{recursive:true});
+  await page.screenshot({path:'test-results/visual/large-import-desktop.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:'test-results/visual/large-import-mobile.png',fullPage:true});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.getByRole('button',{name:'取消'}).click();
+  const result=await exported(page,'长边 720');expect([result.width,result.height]).toEqual([720,504]);
+  const samples=await pixels(page,result.data,[[100,100],[600,100],[100,400],[600,400]]);
+  for(const [i,expected] of [[226,71,45],[66,181,221],[103,184,90],[233,197,101]].entries())
+    for(let channel=0;channel<3;channel++) expect(Math.abs(samples[i][channel]-expected[channel])).toBeLessThanOrEqual(4);
+  expect(errors).toEqual([]);await expect(page.locator('#error')).toBeHidden();
+});
+
+test('files above 32 MB open, while the 256 MB guard preserves the current image',async({page})=>{
+  await page.goto('./');await ready(page);
+  const data=await fixture(page);
+  // Trailing bytes exercise file-size admission independently of pixel dimensions.
+  const bytes=await page.evaluate(base64=>{
+    const png=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+    const file=new File([png,new Uint8Array(33*1024*1024)],'large-file.png',{type:'image/png'});
+    const transfer=new DataTransfer();transfer.items.add(file);
+    window.dispatchEvent(new DragEvent('drop',{dataTransfer:transfer,cancelable:true}));
+    return file.size;
+  },data.toString('base64'));
+  expect(bytes).toBeGreaterThan(32*1024*1024);
+  await expect(page.locator('#file-name')).toHaveText('large-file.png');
+  await expect(page.locator('#error')).toBeHidden();
+  const before=await snapshot(page);
+  await page.evaluate(()=>{
+    const chunk=new Blob([new Uint8Array(1024*1024)]);
+    const file=new File(Array(257).fill(chunk),'too-large.png',{type:'image/png'});
+    const transfer=new DataTransfer();transfer.items.add(file);
+    const input=document.querySelector('#file-input');input.files=transfer.files;input.dispatchEvent(new Event('change'));
+  });
+  await expect(page.locator('#error')).toContainText('256 MB');
+  await expect(page.locator('#file-name')).toHaveText('large-file.png');
+  await expect(page.locator('#export')).toBeEnabled();expect(await snapshot(page)).toBe(before);
+  const result=await exported(page);expect([result.width,result.height]).toEqual([640,480]);
+  await expect(page.locator('#error')).toBeHidden();
+});
+
 test('mobile keeps the preview pinned, exports a smaller size and recovers from errors',async({page})=>{
   await page.setViewportSize({width:390,height:844});await page.goto('./');await ready(page);
   const data=await fixture(page,900,1600);
