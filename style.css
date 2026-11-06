@@ -40,7 +40,7 @@ h2 { margin: 0; }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 0 16px; border-radius: 9px; font-size: 14px; font-weight: 650; white-space: nowrap; transition: transform .15s, background .15s; }
 .button svg { width: 18px; height: 18px; }
 .button:active { transform: translateY(2px); }
-.paper { background: var(--cream); box-shadow: inset 0 0 0 1px var(--line), 0 2px 0 #dde0d8; }
+.paper { background: var(--cream); box-shadow: inset 0 0 0 1px var(--line), 0 3px 0 #d3d8cd; }
 .paper:hover { background: #fff; }
 .accent { background: #d47553; color: #fff9ee; box-shadow: 0 3px 0 #b75c3e; }
 .accent:hover { background: #cb6849; }
