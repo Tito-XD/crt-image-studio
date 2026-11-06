@@ -109,6 +109,9 @@ main { max-width: 1440px; margin: auto; padding: 4px 40px 24px; }
 .preset-swatch.pocket { background: linear-gradient(180deg, #b8c985 0 25%, #7d9758 25% 50%, #4d7045 50% 75%, #1a2b21 75%); }
 .preset-swatch.eightbit { background: conic-gradient(#e86a4f 0 25%, #5b8fd0 0 50%, #f2c84b 0 75%, #57a35a 0) 0 0 / 16px 16px; }
 .preset-swatch:is(.newsprint, .comic, .polaroid, .sepia)::after { display: none; }
+.variant-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.variant-row .segmented { flex: 1; }
+.param-hint { margin: 6px 0 0; font-size: 12px; color: var(--faint); }
 .param-head { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--text); }
 .text-button { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 0; background: transparent; font-size: 13px; color: var(--muted); }
 .text-button:hover:not(:disabled) { color: var(--accent); }

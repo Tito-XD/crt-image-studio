@@ -1,10 +1,10 @@
-import { CRTRenderer, PRESETS, PRESET_GROUPS, PALETTES, CONTROLS, fitSize } from './engine.js';
+import { CRTRenderer, PRESETS, PRESET_GROUPS, VARIANTS, PALETTES, CONTROLS, fitSize } from './engine.js';
 import { RATIOS, BACKDROPS, NEUTRALS, composeFrame, extractPalette, toHex } from './frame.js';
 const $ = id => document.getElementById(id);
 const canvas = $('preview'), screen = $('screen'), monitor = $('monitor'), area = $('stage-area');
 const DEMO = '暮色海岸 · 示例图';
 let renderer, source, image, box, currentURL = null, sourceName = 'image', preset = 'handheld', activeParam = 'scan';
-let settings = { ...PRESETS[preset] }, loadingId = 0, renderingFrame = 0, exportBusy = false, comparing = false, toastTimer;
+let variant = null, settings = { ...PRESETS[preset] }, loadingId = 0, renderingFrame = 0, exportBusy = false, comparing = false, toastTimer;
 let originalSize = { width: 1600, height: 1200 }, contextLost = false, picking = false, palette = [], exportLimit = 'full';
 const frame = { ratio: 'source', fit: 'contain', margin: 8, backdrop: 'blur', color: NEUTRALS[0], autoColor: true, panX: 0, panY: 0 };
 const controls = new Map();
@@ -18,17 +18,20 @@ const fill = (input, min, max) => input.style.setProperty('--fill', `${(Number(i
 
 // One parameter at a time: chips pick which control is shown.
 const NEUTRAL = { brightness: 100, saturation: 100 };
-const isUsed = key => key === 'lines' ? ['scan', 'mask', 'halftone', 'dither'].some(k => settings[k]) : settings[key] !== (NEUTRAL[key] ?? 0);
+// The preset plus its chosen style is what "changed" and reset compare against.
+const variantsOf = name => VARIANTS[name] || [];
+const base = () => ({ ...PRESETS[preset], ...(variantsOf(preset).find(v => v.key === variant)?.values || {}) });
+const isUsed = key => key === 'lines' ? ['scan', 'mask', 'halftone', 'dither', 'bead'].some(k => settings[k]) : settings[key] !== (NEUTRAL[key] ?? 0);
 function updateControl(control) {
   const { input, output, definition, chip } = control, value = settings[definition.key];
   input.value = String(value);
   if (output) { output.value = input.value; fill(input, definition.min, definition.max); }
   chip.classList.toggle('used', isUsed(definition.key));
-  chip.classList.toggle('changed', value !== PRESETS[preset][definition.key]);
+  chip.classList.toggle('changed', value !== base()[definition.key]);
 }
 function refreshParams() {
   controls.forEach(updateControl);
-  $('reset').disabled = !CONTROLS.some(c => settings[c.key] !== PRESETS[preset][c.key]);
+  const reference = base(); $('reset').disabled = !CONTROLS.some(c => settings[c.key] !== reference[c.key]);
 }
 function showParam(key) {
   activeParam = key;
@@ -50,7 +53,9 @@ for (const definition of CONTROLS) {
     input.min = definition.min; input.max = definition.max; input.step = definition.step || 1;
     output = document.createElement('output'); output.setAttribute('for', id); heading.append(output);
   }
-  input.id = id; block.append(heading, input); $('param-chips').append(chip); $('param-body').append(block);
+  input.id = id; block.append(heading, input);
+  if (definition.hint) { const hint = document.createElement('p'); hint.className = 'param-hint'; hint.textContent = definition.hint; block.append(hint); }
+  $('param-chips').append(chip); $('param-body').append(block);
   controls.set(definition.key, { input, output, definition, chip, block });
   chip.addEventListener('click', () => showParam(definition.key));
   input.addEventListener(definition.type === 'select' ? 'change' : 'input', () => { settings[definition.key] = Number(input.value); refreshParams(); scheduleRender(); });
@@ -71,17 +76,28 @@ function showGroup(key) {
   });
 }
 document.querySelectorAll('.preset-tab').forEach(tab => tab.addEventListener('click', () => showGroup(tab.dataset.group)));
+function renderVariants() {
+  const list = variantsOf(preset), holder = $('variant-options');
+  $('variant-row').hidden = !list.length; holder.replaceChildren();
+  for (const item of list) {
+    const button = document.createElement('button'); button.dataset.variant = item.key; button.textContent = item.label;
+    button.setAttribute('aria-pressed', String(item.key === variant));
+    button.addEventListener('click', () => selectVariant(item.key)); holder.append(button);
+  }
+}
+function applyBase() { settings = base(); refreshParams(); scheduleRender(); }
 function selectPreset(name) {
-  preset = name; settings = { ...PRESETS[name] };
+  preset = name; variant = variantsOf(name)[0]?.key ?? null;
   document.querySelectorAll('[data-preset]').forEach(button => {
     const selected = button.dataset.preset === name;
     button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
   });
-  refreshParams(); scheduleRender();
+  renderVariants(); applyBase();
 }
+function selectVariant(key) { variant = key; renderVariants(); applyBase(); }
 document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => selectPreset(button.dataset.preset)));
 selectPreset(preset);
-$('reset').addEventListener('click', () => { selectPreset(preset); toast('已还原'); });
+$('reset').addEventListener('click', () => { applyBase(); toast('已还原'); });
 
 // The frame view temporarily replaces the style view so the preview stays visible.
 function setFrameView(open) {
@@ -327,7 +343,7 @@ async function runExport(limit) {
   if (!source || exportBusy || contextLost) return;
   exportBusy = true; $('export').disabled = true; clearError();
   const ratio = frame.ratio === 'source' ? '' : `-${frame.ratio.replace(':', 'x').replace('.', '-')}`;
-  const snapshot = { ...settings }, composed = source, name = `${sourceName}-crt-${preset}${ratio}.png`;
+  const snapshot = { ...settings }, composed = source, style = variant && variant !== variantsOf(preset)[0].key ? `-${variant}` : '', name = `${sourceName}-crt-${preset}${style}${ratio}.png`;
   const dimensions = fitSize(composed.width, composed.height, limit);
   let exporter;
   try {

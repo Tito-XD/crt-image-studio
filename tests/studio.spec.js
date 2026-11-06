@@ -217,3 +217,34 @@ test('extra palettes: invert flips the pixels and every palette renders differen
   for(const [i,expected] of [[226,71,45],[66,181,221],[103,184,90],[233,197,101]].entries())
     for(let channel=0;channel<3;channel++) expect(Math.abs(samples[i][channel]-(255-expected[channel]))).toBeLessThanOrEqual(2);
 });
+
+test('pixel preset offers an ironed bead style with its own file name and reset',async({page})=>{
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('./');await ready(page);
+  await expect(page.locator('#variant-row')).toBeHidden();
+  const data=await fixture(page);await page.locator('#file-input').setInputFiles({name:'four-colors.png',mimeType:'image/png',buffer:data});
+  await expect(page.locator('#file-name')).toHaveText('four-colors.png');
+  await page.getByRole('button',{name:'纸与像素'}).click();
+  await page.getByRole('button',{name:'八位像素',exact:true}).click();
+  await expect(page.locator('#variant-row')).toBeVisible();
+  await expect(page.locator('[data-variant=square]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('#control-bead')).toHaveValue('0');
+  const square=await snapshot(page);
+  await page.locator('[data-variant=bead]').click();
+  await expect.poll(()=>snapshot(page)).not.toBe(square);
+  await expect(page.locator('#control-bead')).toHaveValue('55');await expect(page.locator('#control-lines')).toHaveValue('120');
+  await expect(page.locator('[data-param=bead]')).toHaveClass(/used/);await expect(page.locator('#reset')).toBeDisabled();
+  await slider(page,'vignette',0);await slider(page,'grain',0);
+  await expect(page.locator('#reset')).toBeEnabled();
+  const beads=await exported(page);expect(beads.name).toBe('four-colors-crt-eightbit-bead.png');
+  // 640×480 at density 120 gives 8 px beads: the corner of a cell is board, the body is a red bead.
+  const [corner,body]=await pixels(page,beads.data,[[40,40],[46,44]]);
+  expect(corner[0]).toBeGreaterThan(170);expect(corner[1]).toBeGreaterThan(170);
+  expect(body[0]).toBeGreaterThan(body[1]*2);expect(body[0]).toBeGreaterThan(130);
+  await page.getByRole('button',{name:'还原预设'}).click();
+  await expect(page.locator('#control-vignette')).toHaveValue('10');await expect(page.locator('#reset')).toBeDisabled();
+  await page.locator('[data-variant=square]').click();await expect(page.locator('#control-bead')).toHaveValue('0');
+  await expect.poll(()=>snapshot(page)).toBe(square);
+  await page.getByRole('button',{name:'漫画网点',exact:true}).click();await expect(page.locator('#variant-row')).toBeHidden();
+  expect(errors).toEqual([]);
+});
