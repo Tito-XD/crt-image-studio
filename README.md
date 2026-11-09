@@ -24,3 +24,28 @@
 npm run dev      # http://127.0.0.1:4173
 npm ci && npm test
 ```
+
+---
+
+# CRT Studio
+
+Apply CRT monitor, VHS tape and old-print effects to any image, then crop it to a wallpaper ratio and export.
+
+**Live at [crt.tito.cafe](https://crt.tito.cafe/)**
+
+## What it does
+
+- **12 presets** in two groups — CRT: Handheld, Arcade, Old TV, Terminal, Amber, VHS; Print & Pixel: Polaroid, Sepia, Newsprint, Comic, Pocket, Pixel. The Pixel preset has an optional ironed-beads style.
+- **19 parameters**, one at a time: scanlines, glow, mask, curve, vignette, grain, paper, halftone, dither, beads, fade, leak, VHS glitch, density, shift, brightness, saturation, warmth, palette.
+- **11 colour palettes**: Colour, Green screen, Amber, Sepia tone, Four-colour, B&W, Invert, Cyanotype, Duotone, Thermal, CMYK.
+- **Framing**: 1:1, 4:3, 3:4, 3:2, 16:9, 9:16, 9:19.5. Contain mode lets you pick a background (blur, solid, paper, grid, dots) and eyedrop a colour from the image. Cover mode lets you pan to reframe.
+- **Export as PNG**: original size or a smaller long-edge cap. The monitor bezel is never included.
+
+Everything is processed locally in the browser — nothing is uploaded. Supports JPG, PNG, WebP and AVIF up to 256 MB. No megapixel limit; large images are scaled down for processing. Maximum export long edge is 4096 px (may be lower depending on device).
+
+## Run locally
+
+```sh
+npm run dev      # http://127.0.0.1:4173
+npm ci && npm test
+```
