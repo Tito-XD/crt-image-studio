@@ -170,4 +170,8 @@ export function applyDOM() {
   for (const el of document.querySelectorAll('[data-i18n-label]')) {
     el.setAttribute('aria-label', t(el.dataset.i18nLabel));
   }
+  // Hide Chinese-only decorative text (e.g. the 显像工坊 subtitle in the logo)
+  for (const el of document.querySelectorAll('[data-i18n-show-zh]')) {
+    el.hidden = true;
+  }
 }
