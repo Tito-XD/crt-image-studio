@@ -1,14 +1,16 @@
 import { CRTRenderer, PRESETS, PRESET_GROUPS, VARIANTS, PALETTES, CONTROLS, fitSize } from './engine.js';
 import { RATIOS, BACKDROPS, NEUTRALS, composeFrame, extractPalette, toHex } from './frame.js';
+import { t, applyDOM, lang } from './i18n.js';
 const $ = id => document.getElementById(id);
 const canvas = $('preview'), screen = $('screen'), monitor = $('monitor'), area = $('stage-area');
-const DEMO = '暮色海岸 · 示例图';
+const DEMO = t('暮色海岸 · 示例图');
 const MAX_IMPORT_MB = 256;
 let renderer, source, image, pendingImage, box, currentURL = null, sourceName = 'image', preset = 'handheld', activeParam = 'scan';
 let variant = null, settings = { ...PRESETS[preset] }, loadingId = 0, renderingFrame = 0, exportBusy = false, comparing = false, toastTimer;
 let originalSize = { width: 1600, height: 1200 }, contextLost = false, picking = false, palette = [], exportLimit = 'full';
 const frame = { ratio: 'source', fit: 'contain', margin: 8, backdrop: 'blur', color: NEUTRALS[0], autoColor: true, panX: 0, panY: 0 };
 const controls = new Map();
+applyDOM();
 const toast = message => {
   clearTimeout(toastTimer); $('toast').textContent = message; $('toast').classList.add('show');
   toastTimer = setTimeout(() => $('toast').classList.remove('show'), 3000);
@@ -40,22 +42,22 @@ function showParam(key) {
 }
 for (const definition of CONTROLS) {
   const id = `control-${definition.key}`;
-  const chip = document.createElement('button'); chip.className = 'param-chip'; chip.textContent = definition.label;
+  const chip = document.createElement('button'); chip.className = 'param-chip'; chip.textContent = t(definition.label);
   chip.dataset.param = definition.key; chip.setAttribute('aria-controls', `param-${definition.key}`);
   const block = document.createElement('div'); block.className = 'slider'; block.id = `param-${definition.key}`;
   const heading = document.createElement('div'); heading.className = 'slider-heading';
-  const label = document.createElement('label'); label.htmlFor = id; label.textContent = definition.label; heading.append(label);
+  const label = document.createElement('label'); label.htmlFor = id; label.textContent = t(definition.label); heading.append(label);
   let input, output;
   if (definition.type === 'select') {
     input = document.createElement('select'); input.className = 'field';
-    PALETTES.forEach((name, index) => input.add(new Option(name, String(index))));
+    PALETTES.forEach((name, index) => input.add(new Option(t(name), String(index))));
   } else {
     input = document.createElement('input'); input.type = 'range';
     input.min = definition.min; input.max = definition.max; input.step = definition.step || 1;
     output = document.createElement('output'); output.setAttribute('for', id); heading.append(output);
   }
   input.id = id; block.append(heading, input);
-  if (definition.hint) { const hint = document.createElement('p'); hint.className = 'param-hint'; hint.textContent = definition.hint; block.append(hint); }
+  if (definition.hint) { const hint = document.createElement('p'); hint.className = 'param-hint'; hint.textContent = t(definition.hint); block.append(hint); }
   $('param-chips').append(chip); $('param-body').append(block);
   controls.set(definition.key, { input, output, definition, chip, block });
   chip.addEventListener('click', () => showParam(definition.key));
@@ -67,7 +69,7 @@ for (const group of PRESET_GROUPS) {
   for (const key of group.presets) {
     const button = document.createElement('button'); button.className = 'preset'; button.dataset.preset = key;
     button.innerHTML = `<span class="preset-swatch ${key}" aria-hidden="true"></span><strong></strong>`;
-    button.querySelector('strong').textContent = PRESETS[key].label; holder.append(button);
+    button.querySelector('strong').textContent = t(PRESETS[key].label); holder.append(button);
   }
 }
 function showGroup(key) {
@@ -81,7 +83,7 @@ function renderVariants() {
   const list = variantsOf(preset), holder = $('variant-options');
   $('variant-row').hidden = !list.length; holder.replaceChildren();
   for (const item of list) {
-    const button = document.createElement('button'); button.dataset.variant = item.key; button.textContent = item.label;
+    const button = document.createElement('button'); button.dataset.variant = item.key; button.textContent = t(item.label);
     button.setAttribute('aria-pressed', String(item.key === variant));
     button.addEventListener('click', () => selectVariant(item.key)); holder.append(button);
   }
@@ -98,7 +100,7 @@ function selectPreset(name) {
 function selectVariant(key) { variant = key; renderVariants(); applyBase(); }
 document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => selectPreset(button.dataset.preset)));
 selectPreset(preset);
-$('reset').addEventListener('click', () => { applyBase(); toast('已还原'); });
+$('reset').addEventListener('click', () => { applyBase(); toast(t('已还原')); });
 
 // The frame view temporarily replaces the style view so the preview stays visible.
 function setFrameView(open) {
@@ -112,12 +114,12 @@ $('frame-done').addEventListener('click', () => setFrameView(false));
 
 // Framing controls.
 for (const ratio of RATIOS) {
-  const chip = document.createElement('button'); chip.className = 'chip'; chip.dataset.ratio = ratio.key; chip.textContent = ratio.label;
+  const chip = document.createElement('button'); chip.className = 'chip'; chip.dataset.ratio = ratio.key; chip.textContent = t(ratio.label);
   chip.setAttribute('aria-pressed', String(ratio.key === frame.ratio)); $('ratio-chips').append(chip);
   chip.addEventListener('click', () => { frame.ratio = ratio.key; frame.panX = frame.panY = 0; frameChanged(); });
 }
 for (const backdrop of BACKDROPS) {
-  const button = document.createElement('button'); button.dataset.backdrop = backdrop.key; button.textContent = backdrop.label;
+  const button = document.createElement('button'); button.dataset.backdrop = backdrop.key; button.textContent = t(backdrop.label);
   $('backdrop-chips').append(button);
   button.addEventListener('click', () => { frame.backdrop = backdrop.key; frameChanged(); });
 }
@@ -134,14 +136,14 @@ function renderSwatches() {
   const holder = $('swatches'); holder.replaceChildren();
   for (const hex of [...new Set([...palette, ...NEUTRALS])]) {
     const button = document.createElement('button'); button.className = 'swatch'; button.style.setProperty('--swatch', hex);
-    button.setAttribute('aria-label', `背景色 ${hex}`); button.setAttribute('aria-pressed', String(hex === frame.color));
+    button.setAttribute('aria-label', `${t('背景色 ')}${hex}`); button.setAttribute('aria-pressed', String(hex === frame.color));
     button.addEventListener('click', () => setColor(hex)); holder.append(button);
   }
 }
 function syncHint() {
   const cover = frame.ratio !== 'source' && frame.fit === 'cover' && box?.overflow && (box.overflow.x > 1 || box.overflow.y > 1);
   screen.classList.toggle('pannable', Boolean(cover) && !picking);
-  const hint = picking ? '点画面取色' : cover ? '拖动调整位置，双击居中' : '';
+  const hint = picking ? t('点画面取色') : cover ? t('拖动调整位置，双击居中') : '';
   $('preview-hint').textContent = hint; $('preview-hint').hidden = !hint;
 }
 function syncFrameUI() {
@@ -151,7 +153,7 @@ function syncFrameUI() {
   document.querySelectorAll('[data-backdrop]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.backdrop === frame.backdrop)));
   $('fit-row').hidden = !framed; $('margin-row').hidden = !contain;
   $('backdrop-row').hidden = !framed || !contain; $('color-row').hidden = !framed || !contain || frame.backdrop === 'blur';
-  $('frame-current').textContent = RATIOS.find(r => r.key === frame.ratio).label;
+  $('frame-current').textContent = t(RATIOS.find(r => r.key === frame.ratio).label);
   const margin = $('frame-margin'); margin.value = frame.margin; $('frame-margin-value').value = frame.margin; fill(margin, 0, 30);
   $('frame-color').value = frame.color; renderSwatches();
   if (!framed || !contain || frame.backdrop === 'blur') { if (picking) setPicking(false); }
@@ -183,7 +185,7 @@ function pickAt(event) {
   const x = Math.min(source.width - 1, Math.max(0, Math.floor((event.clientX - rect.left) / rect.width * source.width)));
   const y = Math.min(source.height - 1, Math.max(0, Math.floor((event.clientY - rect.top) / rect.height * source.height)));
   const [r, g, b] = source.getContext('2d').getImageData(x, y, 1, 1).data;
-  setPicking(false); setColor(toHex(r, g, b)); toast(`已取色 ${toHex(r, g, b)}`);
+  setPicking(false); setColor(toHex(r, g, b)); toast(t('已取色 ') + toHex(r, g, b));
 }
 let drag = null;
 screen.addEventListener('pointerdown', event => {
@@ -244,7 +246,7 @@ function setCompare(value) {
 $('compare').addEventListener('click', () => {
   if (!source) return;
   setCompare(!comparing);
-  if (comparing) toast('左右拖动分界线');
+  if (comparing) toast(t('左右拖动分界线'));
 });
 $('split').addEventListener('input', event => screen.style.setProperty('--split', `${event.target.value}%`));
 
@@ -252,15 +254,15 @@ async function loadImage(url, name, ownedURL = false) {
   const id = ++loadingId;
   pendingImage?.removeAttribute('src');
   const next = new Image(); pendingImage = next;
-  $('loading').hidden = false; $('loading').textContent = '读取中…'; $('export').disabled = true; clearError();
+  $('loading').hidden = false; $('loading').textContent = t('读取中…'); $('export').disabled = true; clearError();
   let committed = false;
   try {
     next.src = url;
     try { await next.decode(); }
-    catch { throw new Error('图片读取失败，可能是文件损坏或设备内存不足。请转成 JPG 或缩小后重试。'); }
+    catch { throw new Error(t('图片读取失败，可能是文件损坏或设备内存不足。请转成 JPG 或缩小后重试。')); }
     if (id !== loadingId) return;
-    if (!next.naturalWidth || !next.naturalHeight) throw new Error('没读到图片内容，换一张试试。');
-    if (!renderer || contextLost) throw new Error('浏览器的绘图功能还没准备好，刷新页面再试一次。');
+    if (!next.naturalWidth || !next.naturalHeight) throw new Error(t('没读到图片内容，换一张试试。'));
+    if (!renderer || contextLost) throw new Error(t('浏览器的绘图功能还没准备好，刷新页面再试一次。'));
     const nextPalette = extractPalette(next);
     const nextColor = frame.autoColor && nextPalette[0] ? nextPalette[0] : frame.color;
     // Camera originals may exceed 100 MP; only the bounded composition reaches the GPU.
@@ -289,9 +291,9 @@ async function loadImage(url, name, ownedURL = false) {
 function openFile(file) {
   if (!file) return;
   if (!['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type)) {
-    showError('目前支持 JPG、PNG、WebP 和 AVIF。'); return;
+    showError(t('目前支持 JPG、PNG、WebP 和 AVIF。')); return;
   }
-  if (file.size > MAX_IMPORT_MB * 1024 * 1024) { showError(`图片超过 ${MAX_IMPORT_MB} MB，压缩一下再打开。`); return; }
+  if (file.size > MAX_IMPORT_MB * 1024 * 1024) { showError(lang === 'zh' ? `图片超过 ${MAX_IMPORT_MB} MB，压缩一下再打开。` : `Image exceeds ${MAX_IMPORT_MB} MB. Please compress it first.`); return; }
   return loadImage(URL.createObjectURL(file), file.name, true);
 }
 $('open-file').addEventListener('click', () => $('file-input').click());
@@ -306,7 +308,7 @@ window.addEventListener('drop', event => {
   if (!event.dataTransfer?.files.length) return;
   event.preventDefault(); dragDepth = 0; $('drop-overlay').hidden = true;
   const files = Array.from(event.dataTransfer.files);
-  openFile(files[0]); if (files.length > 1) toast('只打开了第一张');
+  openFile(files[0]); if (files.length > 1) toast(t('只打开了第一张'));
 });
 window.addEventListener('blur', () => { dragDepth = 0; $('drop-overlay').hidden = true; });
 window.addEventListener('paste', event => {
@@ -318,8 +320,8 @@ window.addEventListener('keydown', event => { if (event.key === 'Escape' && pick
 // Export dialog: only sizes that actually differ from the full size are offered.
 function sizeOptions() {
   const full = fitSize(source.width, source.height, renderer.maxEdge), long = Math.max(full.width, full.height);
-  const options = [{ key: 'full', label: box.capped ? '最大' : '原尺寸', size: full }];
-  for (const edge of [2048, 1080, 720]) if (edge < long) options.push({ key: String(edge), label: `长边 ${edge}`, size: fitSize(source.width, source.height, edge) });
+  const options = [{ key: 'full', label: t(box.capped ? '最大' : '原尺寸'), size: full }];
+  for (const edge of [2048, 1080, 720]) if (edge < long) options.push({ key: String(edge), label: `${t('长边')} ${edge}`, size: fitSize(source.width, source.height, edge) });
   return options;
 }
 function openExport() {
@@ -334,10 +336,13 @@ function openExport() {
     label.children[1].textContent = option.label; label.children[2].textContent = `${option.size.width} × ${option.size.height}`;
     holder.append(label);
   }
-  const framed = frame.ratio !== 'source' ? ` · 画幅 ${RATIOS.find(r => r.key === frame.ratio).label}` : '';
-  $('export-info').textContent = `原图 ${originalSize.width} × ${originalSize.height}${framed}`;
+  const ratioLabel = RATIOS.find(r => r.key === frame.ratio).label;
+  const framed = frame.ratio !== 'source' ? ` · ${t('画幅')} ${ratioLabel}` : '';
+  $('export-info').textContent = `${t('原图 ')}${originalSize.width} × ${originalSize.height}${framed}`;
   $('export-note').hidden = !box.capped;
-  $('export-note').textContent = `当前导出长边最多 ${renderer.maxEdge} px，超出会等比缩小。`;
+  $('export-note').textContent = lang === 'zh'
+    ? `当前导出长边最多 ${renderer.maxEdge} px，超出会等比缩小。`
+    : `Max edge capped at ${renderer.maxEdge} px (GPU limit).`;
   $('export-dialog').showModal();
 }
 $('export').addEventListener('click', openExport);
@@ -358,17 +363,17 @@ async function runExport(limit) {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const output = document.createElement('canvas'); exporter = new CRTRenderer(output); exporter.setSource(composed);
     exporter.render(snapshot, dimensions.width, dimensions.height);
-    const blob = await new Promise((resolve, reject) => output.toBlob(blob => blob ? resolve(blob) : reject(new Error('导出失败，换个小一点的尺寸再试。')), 'image/png'));
+    const blob = await new Promise((resolve, reject) => output.toBlob(blob => blob ? resolve(blob) : reject(new Error(t('导出失败，换个小一点的尺寸再试。'))), 'image/png'));
     const url = URL.createObjectURL(blob), link = document.createElement('a');
     link.href = url; link.download = name; document.body.append(link); link.click(); link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    toast(`已导出 ${dimensions.width} × ${dimensions.height}`);
+    toast(t('已导出 ') + `${dimensions.width} × ${dimensions.height}`);
   } catch (error) { showError(error.message); }
   finally { exporter?.dispose(); exportBusy = false; $('export').disabled = !source || contextLost; }
 }
 canvas.addEventListener('webglcontextlost', event => {
   event.preventDefault(); contextLost = true; $('export').disabled = true;
-  showError('浏览器暂停了绘图，恢复后会继续，设置不会丢。');
+  showError(t('浏览器暂停了绘图，恢复后会继续，设置不会丢。'));
 });
 canvas.addEventListener('webglcontextrestored', () => {
   try {

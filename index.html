@@ -27,31 +27,31 @@
 </defs></svg>
 <header class="site-header">
   <div class="brand-row">
-    <a class="home-link" href="https://tito.cafe" title="返回咖啡主站" aria-label="返回咖啡主站"><svg><use href="#i-cup"/></svg></a>
-    <a href="./" class="brand" aria-label="CRT 显像工坊首页"><span class="brand-mark"><svg><use href="#i-monitor"/></svg></span><strong>CRT<span class="brand-chinese"> 显像工坊</span></strong></a>
+    <a class="home-link" href="https://tito.cafe" title="返回咖啡主站" aria-label="返回咖啡主站" data-i18n-title="返回咖啡主站"><svg><use href="#i-cup"/></svg></a>
+    <a href="./" class="brand" aria-label="CRT 显像工坊首页" data-i18n-label="CRT 显像工坊首页"><span class="brand-mark"><svg><use href="#i-monitor"/></svg></span><strong>CRT<span class="brand-chinese"> 显像工坊</span></strong></a>
   </div>
   <div class="header-right">
-    <span class="local-note"><span class="led"></span>图片不上传</span>
-    <button class="button paper" id="open-file"><svg><use href="#i-upload"/></svg><span>打开<span class="wide-only">图片</span></span></button>
-    <button class="button paper" id="export" disabled><svg><use href="#i-download"/></svg><span>导出<span class="wide-only">图片</span></span></button>
+    <span class="local-note"><span class="led"></span><span data-i18n="图片不上传">图片不上传</span></span>
+    <button class="button paper" id="open-file"><svg><use href="#i-upload"/></svg><span><span data-i18n="打开">打开</span><span class="wide-only" data-i18n="图片">图片</span></span></button>
+    <button class="button paper" id="export" disabled><svg><use href="#i-download"/></svg><span><span data-i18n="导出">导出</span><span class="wide-only" data-i18n="图片">图片</span></span></button>
   </div>
 </header>
 <main>
   <div class="workspace">
-    <section class="preview-panel" aria-label="预览">
+    <section class="preview-panel" aria-label="预览" data-i18n-label="预览">
       <div class="stage">
         <div class="stage-bar">
-          <button class="pill" id="frame-toggle" aria-expanded="false" aria-controls="frame-view"><svg><use href="#i-crop"/></svg><span>画幅</span><span id="frame-current" class="pill-value">原图</span></button>
-          <span id="file-name" class="file-name">暮色海岸 · 示例图</span>
-          <button class="pill" id="compare" aria-pressed="false"><svg><use href="#i-compare"/></svg>对比原图</button>
+          <button class="pill" id="frame-toggle" aria-expanded="false" aria-controls="frame-view"><svg><use href="#i-crop"/></svg><span data-i18n="画幅">画幅</span><span id="frame-current" class="pill-value">原图</span></button>
+          <span id="file-name" class="file-name" data-i18n="暮色海岸 · 示例图">暮色海岸 · 示例图</span>
+          <button class="pill" id="compare" aria-pressed="false"><svg><use href="#i-compare"/></svg><span data-i18n="对比原图">对比原图</span></button>
         </div>
         <div class="stage-area" id="stage-area">
           <div class="monitor" id="monitor">
             <div class="screen" id="screen">
-              <canvas id="preview" aria-label="效果预览"></canvas>
+              <canvas id="preview" aria-label="效果预览" data-i18n-label="效果预览"></canvas>
               <div class="original-layer" id="original-layer" hidden><canvas id="original" aria-hidden="true"></canvas></div>
-              <div class="comparison-ui" id="comparison-ui" hidden><span class="side-label before">原图</span><span class="side-label after">效果</span><div class="split-line"><span>‹ ›</span></div><input id="split" type="range" min="0" max="100" value="50" aria-label="原图与效果分界"></div>
-              <div class="loading-overlay" id="loading">加载中…</div>
+              <div class="comparison-ui" id="comparison-ui" hidden><span class="side-label before" data-i18n="原图" data-i18n-en="Before">原图</span><span class="side-label after" data-i18n="效果">效果</span><div class="split-line"><span>‹ ›</span></div><input id="split" type="range" min="0" max="100" value="50" aria-label="原图与效果分界" data-i18n-label="原图与效果分界"></div>
+              <div class="loading-overlay" id="loading" data-i18n="加载中…">加载中…</div>
             </div>
             <div class="monitor-chin" aria-hidden="true"><span>TITO · CRT</span><span class="monitor-slits"></span><span class="monitor-led"></span></div>
           </div>
@@ -59,53 +59,53 @@
         </div>
       </div>
     </section>
-    <aside class="control-panel" aria-label="调整">
+    <aside class="control-panel" aria-label="调整" data-i18n-label="调整">
       <div id="style-view">
-        <div class="preset-tabs" role="group" aria-label="预设分类">
-          <button class="preset-tab" data-group="crt" aria-pressed="true">显像管</button>
-          <button class="preset-tab" data-group="print" aria-pressed="false">纸与像素</button>
+        <div class="preset-tabs" role="group" aria-label="预设分类" data-i18n-label="预设分类">
+          <button class="preset-tab" data-group="crt" aria-pressed="true" data-i18n="显像管">显像管</button>
+          <button class="preset-tab" data-group="print" aria-pressed="false" data-i18n="纸与像素">纸与像素</button>
         </div>
-        <div class="presets" role="group" aria-label="显像管预设" data-group="crt"></div>
-        <div class="presets" role="group" aria-label="纸与像素预设" data-group="print" hidden></div>
-        <div class="variant-row" id="variant-row" hidden><span class="row-label">样式</span><div class="segmented" role="group" aria-label="预设样式" id="variant-options"></div></div>
-        <div class="param-head"><span>参数</span><button class="text-button" id="reset" disabled><svg><use href="#i-reset"/></svg>还原预设</button></div>
-        <div class="param-chips" role="group" aria-label="参数" id="param-chips"></div>
+        <div class="presets" role="group" aria-label="显像管预设" data-group="crt" data-i18n-label="显像管预设"></div>
+        <div class="presets" role="group" aria-label="纸与像素预设" data-group="print" hidden data-i18n-label="纸与像素预设"></div>
+        <div class="variant-row" id="variant-row" hidden><span class="row-label" data-i18n="样式">样式</span><div class="segmented" role="group" aria-label="预设样式" id="variant-options" data-i18n-label="预设样式"></div></div>
+        <div class="param-head"><span data-i18n="参数">参数</span><button class="text-button" id="reset" disabled><svg><use href="#i-reset"/></svg><span data-i18n="还原预设">还原预设</span></button></div>
+        <div class="param-chips" role="group" aria-label="参数" id="param-chips" data-i18n-label="参数"></div>
         <div class="param-body" id="param-body"></div>
       </div>
       <div id="frame-view" hidden>
-        <div class="view-head"><button class="text-button" id="frame-done"><svg><use href="#i-back"/></svg>完成</button><h2>画幅</h2></div>
-        <div class="frame-group"><span class="row-label">比例</span><div class="chips" role="group" aria-label="画面比例" id="ratio-chips"></div></div>
+        <div class="view-head"><button class="text-button" id="frame-done"><svg><use href="#i-back"/></svg><span data-i18n="完成">完成</span></button><h2 data-i18n="画幅">画幅</h2></div>
+        <div class="frame-group"><span class="row-label" data-i18n="比例">比例</span><div class="chips" role="group" aria-label="画面比例" id="ratio-chips" data-i18n-label="画面比例"></div></div>
         <div class="frame-group" id="fit-row" hidden>
-          <div class="segmented" role="group" aria-label="放置方式"><button data-fit="contain" aria-pressed="true">留边</button><button data-fit="cover" aria-pressed="false">铺满</button></div>
-          <div class="slider" id="margin-row"><div class="slider-heading"><label for="frame-margin">边距</label><output for="frame-margin" id="frame-margin-value">8</output></div><input id="frame-margin" type="range" min="0" max="30" value="8"></div>
+          <div class="segmented" role="group" aria-label="放置方式" data-i18n-label="放置方式"><button data-fit="contain" aria-pressed="true" data-i18n="留边">留边</button><button data-fit="cover" aria-pressed="false" data-i18n="铺满">铺满</button></div>
+          <div class="slider" id="margin-row"><div class="slider-heading"><label for="frame-margin" data-i18n="边距">边距</label><output for="frame-margin" id="frame-margin-value">8</output></div><input id="frame-margin" type="range" min="0" max="30" value="8"></div>
         </div>
-        <div class="frame-group" id="backdrop-row" hidden><span class="row-label">背景</span><div class="segmented wide" role="group" aria-label="背景样式" id="backdrop-chips"></div></div>
+        <div class="frame-group" id="backdrop-row" hidden><span class="row-label" data-i18n="背景">背景</span><div class="segmented wide" role="group" aria-label="背景样式" id="backdrop-chips" data-i18n-label="背景样式"></div></div>
         <div class="frame-group" id="color-row" hidden>
-          <span class="row-label">颜色</span>
+          <span class="row-label" data-i18n="颜色">颜色</span>
           <div class="swatch-row">
-            <div class="swatches" role="group" aria-label="背景颜色" id="swatches"></div>
-            <label class="swatch custom" title="自选颜色"><input type="color" id="frame-color" value="#f2ecdf" aria-label="自选背景颜色"></label>
-            <button class="pill small" id="pick-color" aria-pressed="false"><svg><use href="#i-pipette"/></svg>取色</button>
+            <div class="swatches" role="group" aria-label="背景颜色" id="swatches" data-i18n-label="背景颜色"></div>
+            <label class="swatch custom" title="自选颜色" data-i18n-title="自选颜色"><input type="color" id="frame-color" value="#f2ecdf" aria-label="自选背景颜色" data-i18n-label="自选背景颜色"></label>
+            <button class="pill small" id="pick-color" aria-pressed="false"><svg><use href="#i-pipette"/></svg><span data-i18n="取色">取色</span></button>
           </div>
         </div>
       </div>
     </aside>
   </div>
   <div id="error" class="error-message" role="alert" hidden></div>
-  <footer><button class="text-button" id="load-demo">回到示例图</button><a href="https://tito.cafe">返回 Tito's Cafe</a><a href="https://github.com/Tito-XD/crt-image-studio" target="_blank" rel="noopener noreferrer">源代码 ↗</a><span class="version">v1.4</span></footer>
+  <footer><button class="text-button" id="load-demo" data-i18n="回到示例图">回到示例图</button><a href="https://tito.cafe" data-i18n="返回 Tito's Cafe">返回 Tito's Cafe</a><a href="https://github.com/Tito-XD/crt-image-studio" target="_blank" rel="noopener noreferrer" data-i18n="源代码 ↗">源代码 ↗</a><span class="version">v1.4</span></footer>
 </main>
 <dialog id="export-dialog" aria-labelledby="export-title">
   <div class="dialog-body">
-    <h2 id="export-title">导出 PNG</h2>
+    <h2 id="export-title" data-i18n="导出 PNG">导出 PNG</h2>
     <p class="dialog-meta" id="export-info"></p>
-    <fieldset class="size-options" id="size-options"><legend>尺寸</legend></fieldset>
+    <fieldset class="size-options" id="size-options"><legend data-i18n="尺寸">尺寸</legend></fieldset>
     <p class="dialog-note" id="export-note" hidden></p>
-    <div class="dialog-actions"><button class="button paper" id="export-cancel">取消</button><button class="button accent" id="export-confirm"><svg><use href="#i-download"/></svg>导出</button></div>
+    <div class="dialog-actions"><button class="button paper" id="export-cancel" data-i18n="取消">取消</button><button class="button accent" id="export-confirm"><svg><use href="#i-download"/></svg><span data-i18n="导出">导出</span></button></div>
   </div>
 </dialog>
 <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden>
-<div class="drop-overlay" id="drop-overlay" hidden><div><svg><use href="#i-picture"/></svg><strong>松手打开</strong></div></div>
+<div class="drop-overlay" id="drop-overlay" hidden><div><svg><use href="#i-picture"/></svg><strong data-i18n="松手打开">松手打开</strong></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<noscript><p class="noscript">需要开启 JavaScript。</p></noscript>
+<noscript><p class="noscript" data-i18n="需要开启 JavaScript。">需要开启 JavaScript。</p></noscript>
 </body>
 </html>
